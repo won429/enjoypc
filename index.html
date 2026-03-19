@@ -755,11 +755,11 @@
         </header>
 
         <div class="flex-1 overflow-y-auto scrollbar-hide px-12 pt-8 pb-16 w-full">
-            <!-- PC용 좌우 분할 레이아웃: 좌측(달력), 우측(일정 리스트) -->
-            <div class="max-w-[1100px] mx-auto w-full flex flex-col lg:flex-row gap-10 items-start">
+            <!-- PC용 좌우 분할 레이아웃: 100% 전체 사용 및 2열 리스트 -->
+            <div class="w-full flex flex-col lg:flex-row gap-10 items-start">
                 
-                <!-- 달력 컨테이너 (좌측) -->
-                <div class="flex-[1.2] w-full bg-[#111111] p-6 rounded-[24px] border border-white/5 shadow-2xl">
+                <!-- 달력 컨테이너 (좌측 고정 크기) -->
+                <div class="w-full lg:w-[450px] xl:w-[500px] shrink-0 bg-[#111111] p-6 rounded-[24px] border border-white/5 shadow-2xl">
                     <div class="grid grid-cols-7 text-center pb-4 border-b border-white/10 mb-4">
                         <div class="text-[13px] text-red-500/90 font-bold">일</div>
                         <div class="text-[13px] text-gray-500 font-semibold">월</div>
@@ -772,8 +772,8 @@
                     <div id="calendar-grid" class="grid grid-cols-7 text-center gap-y-2 gap-x-2"></div>
                 </div>
 
-                <!-- 리스트 (우측) -->
-                <div class="flex-[1] w-full sticky top-0 flex flex-col"> 
+                <!-- 리스트 (우측 유동적 크기) -->
+                <div class="flex-1 w-full sticky top-0 flex flex-col"> 
                     <div class="flex justify-between items-end mb-5 px-2">
                         <div class="flex flex-col gap-1">
                             <span class="text-[12px] font-bold text-blue-400 tracking-widest uppercase ml-1">Schedule</span>
@@ -786,7 +786,8 @@
                     
                     <!-- 리스트 영역만 따로 스크롤되도록 박스 처리 -->
                     <div class="bg-black/40 border border-white/5 rounded-[24px] p-5 shadow-lg max-h-[600px] overflow-y-auto scrollbar-hide">
-                        <div id="event-list" class="space-y-3"></div>
+                        <!-- 이달의 일정 두 갈래(2단) 표시 -->
+                        <div id="event-list" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
                     </div>
                 </div>
                 
