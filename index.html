@@ -745,48 +745,48 @@
 
     <!-- 📅 일정 화면 (PC 확장) -->
     <div id="schedule-screen" class="hidden fixed top-20 bottom-0 left-0 w-full z-30 flex-col overflow-hidden bg-black">
-        <header class="flex-none pt-6 px-12 pb-6 flex justify-between items-center bg-black/80 backdrop-blur-md z-10 sticky top-0 border-b border-white/5">
-            <h2 class="text-4xl font-black text-white tracking-tight drop-shadow-sm">일정</h2>
-            <div class="flex items-center bg-[#1C1C1E] rounded-full p-2 border border-white/10 shadow-inner">
-                <button onclick="window.haptic(); window.changeMonth(-1)" class="w-12 h-12 rounded-full hover:bg-white/10 flex items-center justify-center text-gray-400 transition-colors active:scale-90"><i class="fa-solid fa-chevron-left text-[18px]"></i></button>
-                <span id="cal-title" class="text-[22px] font-bold text-white tabular-nums px-4 tracking-wide">2024.05</span>
-                <button onclick="window.haptic(); window.changeMonth(1)" class="w-12 h-12 rounded-full hover:bg-white/10 flex items-center justify-center text-gray-400 transition-colors active:scale-90"><i class="fa-solid fa-chevron-right text-[18px]"></i></button>
+        <header class="flex-none pt-6 px-12 pb-4 flex justify-between items-center bg-black/80 backdrop-blur-md z-10 sticky top-0 border-b border-white/5">
+            <h2 class="text-[28px] font-bold text-white tracking-tight drop-shadow-sm">일정</h2>
+            <div class="flex items-center bg-[#1C1C1E] rounded-full p-1 border border-white/10 shadow-inner">
+                <button onclick="window.haptic(); window.changeMonth(-1)" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-gray-400 transition-colors active:scale-90"><i class="fa-solid fa-chevron-left text-[14px]"></i></button>
+                <span id="cal-title" class="text-[16px] font-bold text-white tabular-nums px-4 tracking-wide">2024.05</span>
+                <button onclick="window.haptic(); window.changeMonth(1)" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-gray-400 transition-colors active:scale-90"><i class="fa-solid fa-chevron-right text-[14px]"></i></button>
             </div>
         </header>
 
         <div class="flex-1 overflow-y-auto scrollbar-hide px-12 pt-8 pb-16 w-full">
             <!-- PC용 좌우 분할 레이아웃: 좌측(달력), 우측(일정 리스트) -->
-            <div class="max-w-[1400px] mx-auto w-full flex flex-col lg:flex-row gap-12 items-start">
+            <div class="max-w-[1100px] mx-auto w-full flex flex-col lg:flex-row gap-10 items-start">
                 
                 <!-- 달력 컨테이너 (좌측) -->
-                <div class="flex-[3] w-full bg-[#111111] p-8 rounded-[32px] border border-white/5 shadow-2xl">
-                    <div class="grid grid-cols-7 text-center pb-6 border-b border-white/10 mb-6">
-                        <div class="text-[16px] text-red-500/90 font-bold">일</div>
-                        <div class="text-[16px] text-gray-500 font-semibold">월</div>
-                        <div class="text-[16px] text-gray-500 font-semibold">화</div>
-                        <div class="text-[16px] text-gray-500 font-semibold">수</div>
-                        <div class="text-[16px] text-gray-500 font-semibold">목</div>
-                        <div class="text-[16px] text-gray-500 font-semibold">금</div>
-                        <div class="text-[16px] text-blue-400/90 font-bold">토</div>
+                <div class="flex-[1.2] w-full bg-[#111111] p-6 rounded-[24px] border border-white/5 shadow-2xl">
+                    <div class="grid grid-cols-7 text-center pb-4 border-b border-white/10 mb-4">
+                        <div class="text-[13px] text-red-500/90 font-bold">일</div>
+                        <div class="text-[13px] text-gray-500 font-semibold">월</div>
+                        <div class="text-[13px] text-gray-500 font-semibold">화</div>
+                        <div class="text-[13px] text-gray-500 font-semibold">수</div>
+                        <div class="text-[13px] text-gray-500 font-semibold">목</div>
+                        <div class="text-[13px] text-gray-500 font-semibold">금</div>
+                        <div class="text-[13px] text-blue-400/90 font-bold">토</div>
                     </div>
-                    <div id="calendar-grid" class="grid grid-cols-7 text-center gap-y-4 gap-x-3"></div>
+                    <div id="calendar-grid" class="grid grid-cols-7 text-center gap-y-2 gap-x-2"></div>
                 </div>
 
                 <!-- 리스트 (우측) -->
-                <div class="flex-[2] w-full sticky top-0 flex flex-col"> 
-                    <div class="flex justify-between items-end mb-8 px-2">
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-[14px] font-bold text-blue-400 tracking-widest uppercase ml-1">Schedule</span>
-                            <h3 class="text-[32px] font-bold text-white tracking-tight leading-none" id="selected-date-title">이달의 일정</h3>
+                <div class="flex-[1] w-full sticky top-0 flex flex-col"> 
+                    <div class="flex justify-between items-end mb-5 px-2">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[12px] font-bold text-blue-400 tracking-widest uppercase ml-1">Schedule</span>
+                            <h3 class="text-[24px] font-bold text-white tracking-tight leading-none" id="selected-date-title">이달의 일정</h3>
                         </div>
-                        <button onclick="window.haptic(); window.openAddScheduleModal()" class="flex items-center gap-2 bg-white/10 text-white px-6 py-3.5 rounded-full text-[16px] font-bold transition-all hover:bg-white/20 active:scale-95 backdrop-blur-md">
-                            <i class="fa-solid fa-plus text-[14px]"></i> 새 일정
+                        <button onclick="window.haptic(); window.openAddScheduleModal()" class="flex items-center gap-1.5 bg-white/10 text-white px-4 py-2.5 rounded-full text-[13px] font-bold transition-all hover:bg-white/20 active:scale-95 backdrop-blur-md">
+                            <i class="fa-solid fa-plus text-[12px]"></i> 새 일정
                         </button>
                     </div>
                     
                     <!-- 리스트 영역만 따로 스크롤되도록 박스 처리 -->
-                    <div class="bg-black/40 border border-white/5 rounded-[32px] p-6 shadow-lg max-h-[650px] overflow-y-auto scrollbar-hide">
-                        <div id="event-list" class="space-y-4"></div>
+                    <div class="bg-black/40 border border-white/5 rounded-[24px] p-5 shadow-lg max-h-[600px] overflow-y-auto scrollbar-hide">
+                        <div id="event-list" class="space-y-3"></div>
                     </div>
                 </div>
                 
@@ -974,17 +974,6 @@
             <h3 class="text-2xl font-bold text-main mb-4" id="modal-title">제목</h3>
             <p class="text-[#A1A1A6] text-lg mb-8 leading-relaxed break-keep" id="modal-desc">내용</p>
             <button onclick="window.haptic(); window.closeModal('common-modal')" class="w-full bg-[#3182F6] text-white font-bold py-4 text-lg rounded-2xl hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20 active:scale-95">확인</button>
-        </div>
-    </div>
-
-    <div id="push-prompt-modal" class="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center px-6">
-        <div class="bg-[#1C1C1E] rounded-[32px] p-10 w-full max-w-md shadow-2xl scale-in text-center border border-white/5 relative">
-            <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl bg-blue-500/20 text-blue-400">
-                <i class="fa-solid fa-bell animate-bounce"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-main mb-4">알림을 켜주세요!</h3>
-            <p class="text-[#A1A1A6] text-lg mb-8 leading-relaxed break-keep">새로운 에피소드나 회비 공지 등<br>중요한 소식을 놓치지 않게 알려드릴게요.</p>
-            <button onclick="window.haptic(); window.requestPushPermission(); window.closeModal('push-prompt-modal');" class="w-full bg-[#3182F6] text-white font-bold py-4 text-lg rounded-2xl hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20 active:scale-95">알림 허용하기</button>
         </div>
     </div>
 
@@ -1656,7 +1645,7 @@
                         else if(e.type==='anniv') c='bg-pink-400'; 
                         else if(e.type==='personal') c='bg-gray-400'; 
                         else if(e.type==='personal_dot') c='bg-gray-500'; 
-                        if(e.type!=='holiday') dots += `<div class="w-2 h-2 rounded-full ${c} shadow-sm"></div>`; 
+                        if(e.type!=='holiday') dots += `<div class="w-1.5 h-1.5 rounded-full ${c} shadow-sm"></div>`; 
                     }); 
                 } 
                 
@@ -1666,10 +1655,10 @@
                 else if (dayOfWeek === 6) dateClass = 'text-blue-400';
                 if(dayEvts && dayEvts.some(e => e.type === 'holiday')) dateClass = 'text-red-400'; 
                 
-                let todayBg = isToday ? `<div class="absolute inset-0 bg-blue-500 rounded-[20px] shadow-[0_2px_10px_rgba(59,130,246,0.5)] z-0"></div>` : '';
+                let todayBg = isToday ? `<div class="absolute inset-0 bg-blue-500 rounded-[12px] shadow-[0_2px_10px_rgba(59,130,246,0.5)] z-0"></div>` : '';
                 let numClass = isToday ? 'text-white font-bold relative z-10' : `${dateClass} relative z-10 font-bold`;
                 
-                grid.innerHTML += `<div class="h-[120px] relative flex flex-col items-center pt-3 rounded-[20px] hover:bg-white/5 transition-colors cursor-default">${todayBg}<span class="text-[20px] ${numClass}">${i}</span><div class="flex gap-1.5 mt-2 flex-wrap justify-center px-2 relative z-10">${dots}</div></div>`; 
+                grid.innerHTML += `<div class="h-[80px] relative flex flex-col items-center pt-2 rounded-[12px] hover:bg-white/5 transition-colors cursor-default">${todayBg}<span class="text-[15px] ${numClass}">${i}</span><div class="flex gap-1 mt-1.5 flex-wrap justify-center px-1 relative z-10">${dots}</div></div>`; 
                 
                 if(dayEvts) { 
                     dayEvts.forEach((e, idx) => { 
@@ -1690,12 +1679,12 @@
                         if(e.type === 'anniv' && month === 5) { 
                             if(!renderedLongTermEvents.has('anniv_6')) { 
                                 renderedLongTermEvents.add('anniv_6'); 
-                                list.innerHTML = `<div class="relative bg-gradient-to-r from-red-500/10 to-white/5 backdrop-blur-md border border-white/10 rounded-[28px] p-6 flex items-center gap-6 mb-4 animate-[fadeInUp_0.3s_ease-out] shadow-sm"><div class="absolute left-0 top-4 bottom-4 w-1.5 rounded-r-md bg-red-500 opacity-80"></div><div class="w-16 h-16 rounded-[20px] bg-red-500/20 flex items-center justify-center text-[26px] shrink-0 text-red-400 ml-2"><i class="fa-solid fa-cake-candles"></i></div><div class="flex-1"><div class="flex items-center gap-2 mb-1.5"><span class="text-[13px] font-bold text-white/90 bg-white/10 px-3 py-1 rounded-lg backdrop-blur-sm">6월 1일 ~ 6월 30일</span></div><p class="text-[22px] font-bold text-white tracking-tight">${e.title}</p><p class="text-[15px] text-red-400 mt-1">한 달 내내 축하해요!</p></div></div>` + list.innerHTML; 
+                                list.innerHTML = `<div class="relative bg-gradient-to-r from-red-500/10 to-white/5 backdrop-blur-md border border-white/10 rounded-[20px] p-4 flex items-center gap-4 mb-3 animate-[fadeInUp_0.3s_ease-out] shadow-sm"><div class="absolute left-0 top-3 bottom-3 w-1 rounded-r-md bg-red-500 opacity-80"></div><div class="w-11 h-11 rounded-[14px] bg-red-500/20 flex items-center justify-center text-[20px] shrink-0 text-red-400 ml-1"><i class="fa-solid fa-cake-candles"></i></div><div class="flex-1"><div class="flex items-center gap-1.5 mb-1"><span class="text-[11px] font-bold text-white/90 bg-white/10 px-2 py-0.5 rounded-md backdrop-blur-sm">6월 1일 ~ 6월 30일</span></div><p class="text-[16px] font-bold text-white tracking-tight">${e.title}</p><p class="text-[12px] text-red-400 mt-0.5">한 달 내내 축하해요!</p></div></div>` + list.innerHTML; 
                             } 
                         } else if(e.type === 'personal' && !e.isFirebase) { 
                             if(!renderedLongTermEvents.has(e.title)) { 
                                 renderedLongTermEvents.add(e.title); 
-                                list.innerHTML += `<div class="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-[28px] p-6 flex items-center gap-6 animate-[fadeInUp_0.3s_ease-out] shadow-sm"><div class="absolute left-0 top-4 bottom-4 w-1.5 rounded-r-md bg-gray-500 opacity-50"></div><div class="w-16 h-16 rounded-[20px] bg-white/10 flex items-center justify-center text-[26px] shrink-0 text-gray-300 ml-2"><i class="fa-solid fa-house-user"></i></div><div class="flex-1"><div class="flex items-center gap-2 mb-1.5"><span class="text-[13px] font-bold text-white/80 bg-white/10 px-3 py-1 rounded-lg backdrop-blur-sm">12.23 ~ 01.22</span></div><p class="text-[22px] font-bold text-white tracking-tight">${e.title}</p><p class="text-[15px] text-gray-400 mt-1">장기 일정입니다</p></div></div>`; 
+                                list.innerHTML += `<div class="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-[20px] p-4 flex items-center gap-4 animate-[fadeInUp_0.3s_ease-out] shadow-sm"><div class="absolute left-0 top-3 bottom-3 w-1 rounded-r-md bg-gray-500 opacity-50"></div><div class="w-11 h-11 rounded-[14px] bg-white/10 flex items-center justify-center text-[20px] shrink-0 text-gray-300 ml-1"><i class="fa-solid fa-house-user"></i></div><div class="flex-1"><div class="flex items-center gap-1.5 mb-1"><span class="text-[11px] font-bold text-white/80 bg-white/10 px-2 py-0.5 rounded-md backdrop-blur-sm">12.23 ~ 01.22</span></div><p class="text-[16px] font-bold text-white tracking-tight">${e.title}</p><p class="text-[12px] text-gray-400 mt-0.5">장기 일정입니다</p></div></div>`; 
                             } 
                         } else if(e.type === 'personal_dot') { 
                             // 점만 찍고 리스트에는 표시 안 함
@@ -1710,20 +1699,20 @@
                             
                             const dateStr = `${month + 1}월 ${i}일`; 
                             const activeClass = onclickAttr ? 'active:scale-95 cursor-pointer hover:bg-white/10' : 'active:scale-95 cursor-pointer hover:bg-white/10'; 
-                            const penHtml = showPen ? `<div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-white/20 hover:text-white transition-colors ml-auto"><i class="fa-solid fa-pen text-[15px]"></i></div>` : ''; 
+                            const penHtml = showPen ? `<div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-white/20 hover:text-white transition-colors ml-auto"><i class="fa-solid fa-pen text-[12px]"></i></div>` : ''; 
                             
                             list.innerHTML += `
-                            <div class="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-[28px] p-6 flex items-center gap-6 animate-[fadeInUp_0.3s_ease-out] shadow-sm transition-all ${activeClass}" ${onclickAttr}>
-                                <div class="absolute left-0 top-4 bottom-4 w-1.5 rounded-r-md ${accent} opacity-70"></div>
-                                <div class="w-16 h-16 rounded-[20px] ${bg} flex items-center justify-center text-[26px] shrink-0 ml-2">
+                            <div class="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-[20px] p-4 flex items-center gap-4 animate-[fadeInUp_0.3s_ease-out] shadow-sm transition-all ${activeClass}" ${onclickAttr}>
+                                <div class="absolute left-0 top-3 bottom-3 w-1 rounded-r-md ${accent} opacity-70"></div>
+                                <div class="w-11 h-11 rounded-[14px] ${bg} flex items-center justify-center text-[20px] shrink-0 ml-1">
                                     <i class="fa-solid ${icon}"></i>
                                 </div>
                                 <div class="flex-1 overflow-hidden">
-                                    <div class="flex items-center gap-2 mb-1.5">
-                                        <span class="text-[13px] font-bold text-white/90 bg-white/10 px-3 py-1 rounded-lg backdrop-blur-sm">${dateStr}</span>
-                                        <span class="text-[15px] font-medium text-gray-400 truncate">${e.time}</span>
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span class="text-[11px] font-bold text-white/90 bg-white/10 px-2 py-0.5 rounded-md backdrop-blur-sm">${dateStr}</span>
+                                        <span class="text-[12px] font-medium text-gray-400 truncate">${e.time}</span>
                                     </div>
-                                    <p class="text-[22px] font-bold text-white tracking-tight truncate">${e.title}</p>
+                                    <p class="text-[16px] font-bold text-white tracking-tight truncate">${e.title}</p>
                                 </div>
                                 ${penHtml}
                             </div>`; 
@@ -1733,12 +1722,12 @@
             } 
             
             if(!hasEvents) list.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-20 text-center bg-white/5 backdrop-blur-md border border-white/10 rounded-[32px]">
-                    <div class="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mb-4">
-                        <i class="fa-regular fa-calendar-xmark text-4xl text-gray-400"></i>
+                <div class="flex flex-col items-center justify-center py-14 text-center bg-white/5 backdrop-blur-md border border-white/10 rounded-[24px]">
+                    <div class="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mb-3">
+                        <i class="fa-regular fa-calendar-xmark text-2xl text-gray-400"></i>
                     </div>
-                    <p class="text-[20px] font-bold text-white/90 mb-2">등록된 일정이 없어요</p>
-                    <p class="text-[15px] text-gray-400">우측 상단 버튼으로 추가해보세요!</p>
+                    <p class="text-[16px] font-bold text-white/90 mb-1">등록된 일정이 없어요</p>
+                    <p class="text-[13px] text-gray-400">우측 상단 버튼으로 추가해보세요!</p>
                 </div>`; 
         };
 
@@ -1823,7 +1812,7 @@
             
             setTimeout(() => {
                 if ('Notification' in window && Notification.permission === 'default') {
-                    window.showModal('push-prompt-modal');
+                    window.requestPushPermission();
                 }
             }, 1500);
         };
@@ -1832,7 +1821,7 @@
 
     <!-- Firebase Module -->
     <script type="module">
-        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, getDoc, addDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
@@ -1880,7 +1869,7 @@
                         alert(`🔔 [알림] ${payload.notification?.title}\n${payload.notification?.body}`);
                     });
                 } catch (msgErr) {
-                    console.warn("Messaging Init Failed (Localhost/HTTPS 환경 필요):", msgErr);
+                    console.warn("Messaging Init Failed:", msgErr);
                 }
 
                 try {
