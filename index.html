@@ -174,7 +174,7 @@
     <main id="home-screen" class="flex-1 overflow-y-auto scrollbar-hide pt-12 px-8 md:px-12 pb-16 w-full relative min-h-full">
         
         <!-- 대형 배너: PC용 사이즈업 -->
-        <div id="apple-tv-banner" class="fade-in-up delay-100 mb-10 -mx-8 md:-mx-12 mt-0 h-[600px] bg-black relative group transition-transform duration-300 overflow-hidden">
+        <div id="apple-tv-banner" class="fade-in-up delay-100 mb-10 -mx-8 md:-mx-12 mt-0 aspect-[1920/600] min-h-[480px] max-h-[800px] bg-black relative group transition-transform duration-300 overflow-hidden">
             <!-- 기존 JS 수정 없이 Apple TV 스타일 인디케이터를 구현하기 위한 로컬 스타일 -->
             <style>
                 #apple-tv-banner .bg-black\/60 { background-color: #ffffff !important; width: 28px !important; border-radius: 4px !important; }
@@ -233,7 +233,7 @@
                 <!-- 슬라이드 0: 엔쪽이 브이로그 (과거 여행) -->
                 <div class="w-full flex-shrink-0 snap-center h-full relative overflow-hidden cursor-pointer bg-black group" onclick="window.haptic(); window.openBrowser('https://www.youtube.com/playlist?list=PL6V2mJA2-n8p77MHyBm8TM-fzkTXw2oSj&jct=dk4QOH-EJt3HuZgM0KvrcQ')">
                     <div class="absolute inset-0">
-                        <img src="banner_1_pc.jpg" class="w-full h-full object-cover object-[50%_80%] opacity-80" onerror="this.style.display='none'">
+                        <img src="banner_1_pc.jpg" class="w-full h-full object-cover object-center opacity-80" onerror="this.style.display='none'">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
                     </div>
                     
@@ -298,7 +298,7 @@
                 <!-- 슬라이드 2: 그날 엔조이 이야기 -->
                 <div class="w-full flex-shrink-0 snap-center h-full relative overflow-hidden cursor-pointer bg-black group" onclick="window.haptic(); window.openBrowser('https://www.youtube.com/playlist?list=PL6V2mJA2-n8rssJc8wQE3jvPGqAFP_yQs&jct=OCpt0PxmET_Ej_etMpY-lw')">
                     <div class="absolute inset-0">
-                        <img src="banner_2_pc.jpg" class="w-full h-full object-cover object-[50%_80%] opacity-80" onerror="this.style.display='none'">
+                        <img src="banner_2_pc.jpg" class="w-full h-full object-cover object-center opacity-80" onerror="this.style.display='none'">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
                     </div>
                     
@@ -317,7 +317,7 @@
                 <!-- 슬라이드 3: 환승여행 -->
                 <div class="w-full flex-shrink-0 snap-center h-full relative overflow-hidden cursor-pointer bg-black" onclick="window.haptic(); window.openBrowser('https://youtu.be/n9rhdR9jwaI')">
                     <div class="absolute inset-0">
-                        <img src="banner_3_pc.jpg" class="w-full h-full object-cover object-[50%_80%] opacity-80" onerror="this.style.display='none'">
+                        <img src="banner_3_pc.jpg" class="w-full h-full object-cover object-center opacity-80" onerror="this.style.display='none'">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
                     </div>
                     
@@ -336,7 +336,7 @@
                 <!-- 슬라이드 4: 출장엔조이 OST 공개 -->
                 <div class="w-full flex-shrink-0 snap-center h-full relative overflow-hidden cursor-pointer bg-black" onclick="window.haptic(); window.goToMusic()">
                     <div class="absolute inset-0">
-                        <img src="banner_4_pc.jpg" class="w-full h-full object-cover object-[50%_80%] opacity-80" onerror="this.style.display='none'">
+                        <img src="banner_4_pc.jpg" class="w-full h-full object-cover object-center opacity-80" onerror="this.style.display='none'">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
                     </div>
                     
