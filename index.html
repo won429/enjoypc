@@ -131,35 +131,35 @@
 <body class="w-full h-[100dvh] flex flex-col overflow-hidden bg-black" ontouchstart="">
 
     <!-- 상단 탭 메뉴 (PC 버전) -->
-    <nav id="top-nav" class="fixed top-0 left-0 right-0 z-50 flex justify-center bg-black/80 backdrop-blur-xl border-b border-white/5 h-20">
-        <div class="flex items-center justify-between w-full px-8 md:px-12">
+    <nav id="top-nav" class="fixed top-0 left-0 right-0 z-50 flex justify-center bg-black/80 backdrop-blur-xl border-b border-white/5 h-12">
+        <div class="flex items-center justify-between w-full px-8 md:px-12 h-full">
             <!-- 로고 -->
-            <div class="text-[28px] font-black text-white tracking-tighter cursor-pointer" onclick="window.haptic(); window.goHome()">
+            <div class="text-[22px] font-black text-white tracking-tighter cursor-pointer" onclick="window.haptic(); window.goHome()">
                 ENJOY<span class="text-blue-500">.</span>
             </div>
             
             <!-- 메뉴 컨테이너 -->
-            <div class="flex items-center p-1.5 gap-2 relative h-12">
-                <div id="nav-indicator" class="absolute top-0 bottom-0 bg-white/10 rounded-xl transition-all duration-300 z-0 nav-transition" style="left: 6px; width: 64px;"></div>
+            <div class="flex items-center p-1.5 gap-2 relative h-full">
+                <div id="nav-indicator" class="absolute bottom-[8px] h-[3px] bg-[#3182F6] rounded-full transition-all duration-300 z-0 nav-transition" style="left: 6px; width: 64px;"></div>
                 
-                <button id="nav-home" class="relative px-6 py-2.5 rounded-xl group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.goHome()">
-                    <span class="text-[16px] font-bold text-white transition-colors relative z-10">홈</span>
+                <button id="nav-home" class="relative px-5 py-1.5 group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.goHome()">
+                    <span class="text-[15px] font-bold text-white transition-colors relative z-10">홈</span>
                 </button>
                 
-                <button id="nav-calendar" class="relative px-6 py-2.5 rounded-xl group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.goSchedule()">
-                    <span class="text-[16px] font-medium text-gray-400 group-hover:text-white transition-colors relative z-10">일정</span>
+                <button id="nav-calendar" class="relative px-5 py-1.5 group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.goSchedule()">
+                    <span class="text-[15px] font-medium text-gray-400 group-hover:text-white transition-colors relative z-10">일정</span>
                 </button>
                 
-                <button id="nav-meeting" class="relative px-6 py-2.5 rounded-xl group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.goMeeting()">
-                    <span class="text-[16px] font-medium text-gray-400 group-hover:text-white transition-colors relative z-10">모임통장</span>
+                <button id="nav-meeting" class="relative px-5 py-1.5 group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.goMeeting()">
+                    <span class="text-[15px] font-medium text-gray-400 group-hover:text-white transition-colors relative z-10">모임통장</span>
                 </button>
                 
-                <button id="nav-music" class="relative px-6 py-2.5 rounded-xl group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.goToMusic()">
-                    <span class="text-[16px] font-medium text-gray-400 group-hover:text-white transition-colors relative z-10">음악</span>
+                <button id="nav-music" class="relative px-5 py-1.5 group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.goToMusic()">
+                    <span class="text-[15px] font-medium text-gray-400 group-hover:text-white transition-colors relative z-10">음악</span>
                 </button>
 
-                <button id="nav-more" class="relative px-6 py-2.5 rounded-xl group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.goMore()">
-                    <span class="text-[16px] font-medium text-gray-400 group-hover:text-white transition-colors relative z-10">더보기</span>
+                <button id="nav-more" class="relative px-5 py-1.5 group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.goMore()">
+                    <span class="text-[15px] font-medium text-gray-400 group-hover:text-white transition-colors relative z-10">더보기</span>
                 </button>
             </div>
         </div>
@@ -167,7 +167,7 @@
 
     <!-- 메인 컨텐츠 (홈 화면) -->
     <!-- PC용으로 최대 너비(max-w-[1200px]) 확장 및 여백 조정 -->
-    <main id="home-screen" class="flex-1 overflow-y-auto scrollbar-hide pt-24 px-8 md:px-12 pb-16 w-full relative min-h-full">
+    <main id="home-screen" class="flex-1 overflow-y-auto scrollbar-hide pt-16 px-8 md:px-12 pb-16 w-full relative min-h-full">
         
         <!-- 대형 배너: PC용 사이즈업 -->
         <div id="apple-tv-banner" class="fade-in-up delay-100 mb-10 -mx-8 md:-mx-12 mt-0 h-[600px] bg-black relative group transition-transform duration-300 overflow-hidden">
@@ -616,7 +616,7 @@
     </main>
 
     <!-- ➕ 더보기 화면 (PC 확장) -->
-    <div id="more-screen" class="hidden fixed top-20 bottom-0 left-0 w-full z-30 flex-col overflow-hidden bg-black">
+    <div id="more-screen" class="hidden fixed top-12 bottom-0 left-0 w-full z-30 flex-col overflow-hidden bg-black">
         <header class="flex-none pt-6 px-12 pb-6 flex justify-between items-center bg-black/80 backdrop-blur-md z-10 sticky top-0 border-b border-white/5">
             <h2 class="text-[36px] font-bold text-white tracking-tight">더보기</h2>
         </header>
@@ -744,7 +744,7 @@
     </div>
 
     <!-- 📅 일정 화면 (PC 확장) -->
-    <div id="schedule-screen" class="hidden fixed top-20 bottom-0 left-0 w-full z-30 flex-col overflow-hidden bg-black">
+    <div id="schedule-screen" class="hidden fixed top-12 bottom-0 left-0 w-full z-30 flex-col overflow-hidden bg-black">
         <header class="flex-none pt-6 px-12 pb-4 flex justify-between items-center bg-black/80 backdrop-blur-md z-10 sticky top-0 border-b border-white/5">
             <h2 class="text-[28px] font-bold text-white tracking-tight drop-shadow-sm">일정</h2>
             <div class="flex items-center bg-[#1C1C1E] rounded-full p-1 border border-white/10 shadow-inner">
@@ -795,7 +795,7 @@
     </div>
 
     <!-- 💰 모임통장 화면 (PC 확장) -->
-    <div id="meeting-screen" class="hidden fixed top-20 bottom-0 left-0 w-full z-30 flex-col overflow-hidden bg-black">
+    <div id="meeting-screen" class="hidden fixed top-12 bottom-0 left-0 w-full z-30 flex-col overflow-hidden bg-black">
         <header class="flex-none pt-6 px-12 pb-6 flex justify-between items-center bg-black/80 backdrop-blur-md z-10 sticky top-0 border-b border-white/5">
             <h2 class="text-[36px] font-bold text-white tracking-tight">모임통장</h2>
             <button onclick="window.haptic(); window.openPasswordModal()" class="text-gray-400 hover:text-white transition-colors active:scale-90 p-2"><i class="fa-solid fa-gear text-2xl"></i></button>
@@ -1772,9 +1772,14 @@
             ];
             
             if(btns[index] && ind) {
+                const span = btns[index].querySelector('span');
+                const spanWidth = span ? span.offsetWidth : btns[index].offsetWidth;
+                const btnWidth = btns[index].offsetWidth;
+                const btnLeft = btns[index].offsetLeft;
+                
                 ind.classList.add('nav-transition');
-                ind.style.width = `${btns[index].offsetWidth}px`;
-                ind.style.transform = `translateX(${btns[index].offsetLeft - 6}px)`;
+                ind.style.width = `${spanWidth}px`;
+                ind.style.transform = `translateX(${btnLeft - 6 + (btnWidth - spanWidth) / 2}px)`;
             }
 
             btns.forEach((btn, i) => {
