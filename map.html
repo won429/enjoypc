@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>친구 위치 공유 - Toss Style</title>
+    
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. 폰트 및 아이콘 (Pretendard & FontAwesome) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" type="text/css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 3. 네이버 지도 API -->
+    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=9nl297jo77&submodules=geocoder"></script>
+
+    <style>
+        /* 폰트 및 기본 스타일 (index.html과 통일) */
+        @font-face {
+            font-family: 'TossFaceFontMac';
+            src: url('https://cdn.jsdelivr.net/gh/toss/tossface/dist/tossface-font-mac.css');
+        }
+
+        body { 
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+            background-color: #F2F4F6;
+            color: #191F28;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+            touch-action: pan-y;
+        }
+
+        /* 유리 재질 카드 */
+        .toss-card {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04); 
+            transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.1s;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+        }
+        .toss-card:active {
+            transform: scale(0.96);
+            filter: brightness(0.95);
+        }
+
+        /* 텍스트 유틸리티 */
+        .text-main { color: #191F28; }
+        .text-sub { color: #6B7684; }
+        .text-blue { color: #3182F6; }
+        
+        /* 애니메이션 */
+        .fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+
+        /* 지도 마커 스타일 */
+        .marker-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 44px; height: 60px; pointer-events: none; }
+        .emoji-marker { pointer-events: auto; background-color: white; border-radius: 50%; width: 44px; height: 44px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 26px; border: 2.5px solid white; transition: transform 0.2s; z-index: 10; }
+        .emoji-marker:active { transform: scale(0.9); }
+        .marker-name { pointer-events: auto; text-align: center; font-size: 11px; font-weight: bold; background: rgba(255,255,255,0.95); padding: 4px 8px; border-radius: 12px; margin-top: 4px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); color: #333; border: 1px solid rgba(0,0,0,0.05); z-index: 20; }
+
+        /* 안전 영역 */
+        .pt-safe { padding-top: max(20px, env(safe-area-inset-top)); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 하단 네비게이션 애니메이션 */
+        #nav-indicator { will-change: transform, width; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        
+        /* 상태 표시 점 애니메이션 */
+        .online-dot { width: 8px; height: 8px; background-color: #3182F6; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 2px white; animation: pulse-blue 2s infinite; }
+        .offline-dot { width: 8px; height: 8px; background-color: #B0B8C1; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 2px white; }
+        @keyframes pulse-blue {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(49, 130, 246, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 4px rgba(49, 130, 246, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(49, 130, 246, 0); }
+        }
+    </style>
+</head>
+<body class="w-full h-[100dvh] flex flex-col overflow-hidden bg-gradient-to-br from-[#F2F4F6] via-[#E8ECF2] to-[#DEE2E6]" ontouchstart="">
+
+    <!-- 로그인 모달 -->
+    <div id="login-modal" class="fixed inset-0 z-[999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 transition-opacity duration-300">
+        <div class="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-in text-center relative">
+            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl text-blue-500 shadow-sm">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <!-- ID 추가: 텍스트 변경을 위해 -->
+            <h2 id="login-title" class="text-xl font-bold text-main mb-2">당신은 누구십니까?</h2>
+            <p id="login-desc" class="text-sub text-sm mb-6">우리 6명만 들어올 수 있어요.<br>이름을 입력해주세요.</p>
+            
+            <!-- ID 추가: 폼 영역 제어를 위해 -->
+            <div id="login-form" class="space-y-3">
+                <input type="text" id="login-input" placeholder="이름 입력" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-center text-base font-bold text-main focus:outline-none focus:border-blue-500 focus:bg-white transition-all placeholder-gray-400">
+                <p id="login-error" class="text-red-500 text-xs font-bold h-4"></p>
+                <button onclick="tryLogin()" class="w-full bg-[#3182F6] text-white font-bold py-3.5 rounded-xl hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20 active:scale-95">
+                    입장하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <main id="app-content" class="flex-1 overflow-hidden relative w-full max-w-md mx-auto h-full hidden">
+        
+        <!-- 지도 탭 (풀화면 + 하단 메뉴 스타일 상단바) -->
+        <div id="view-map" class="absolute inset-0 w-full h-full">
+            <div class="w-full h-full relative bg-gray-100 fade-in-up">
+                <div id="map" class="w-full h-full z-0 outline-none"></div>
+                
+                <!-- 상단 상태바 (하단 메뉴 디자인 + 상단 밀착 top-0) -->
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 z-20 pt-safe w-auto pointer-events-none">
+                    <div class="flex items-center bg-white/10 backdrop-blur-[4px] backdrop-saturate-[180%] shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] border border-white/20 rounded-full px-4 py-2 gap-3 ring-1 ring-white/30 pointer-events-auto mt-2">
+                        <!-- 접속자 정보 -->
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-user-group text-xs text-[#4E5968]"></i>
+                            <span id="map-count" class="font-bold text-sm tabular-nums text-[#191F28]">0</span>
+                        </div>
+
+                        <!-- 구분선 -->
+                        <div class="w-px h-3 bg-black/10"></div>
+
+                        <!-- 새로고침 -->
+                        <div onclick="updateLocation()" class="cursor-pointer active:scale-90 transition-transform flex items-center justify-center w-6 h-6">
+                            <i id="refresh-icon" class="fa-solid fa-rotate-right text-sm text-[#191F28]"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 친구 목록 탭 -->
+        <div id="view-friends" class="absolute inset-0 flex flex-col pt-safe pb-24 px-5 h-full hidden overflow-y-auto scrollbar-hide">
+            <h2 class="text-2xl font-bold text-main mb-6 mt-4 px-1 fade-in-up">친구 목록 <span class="text-blue-500 text-lg align-top" id="list-count">0</span></h2>
+            <div id="friends-grid" class="space-y-3 pb-8 fade-in-up delay-100">
+                <!-- 친구 카드들이 여기에 동적으로 추가됨 -->
+            </div>
+        </div>
+
+        <!-- 프로필 탭 -->
+        <div id="view-profile" class="absolute inset-0 flex flex-col pt-safe pb-24 px-5 h-full hidden overflow-y-auto scrollbar-hide">
+            <h2 class="text-2xl font-bold text-main mb-6 mt-4 px-1 fade-in-up">프로필 설정</h2>
+            
+            <div class="toss-card p-6 mb-4 fade-in-up delay-100 !cursor-default active:transform-none">
+                <label class="block text-xs font-bold text-sub mb-1.5 ml-1">내 이름</label>
+                <div id="profile-name" class="w-full bg-gray-50 rounded-xl px-4 py-3.5 text-base text-main font-bold border border-gray-100"></div>
+                
+                <div class="mt-5">
+                    <label class="block text-xs font-bold text-sub mb-1.5 ml-1">현재 위치 (자동 감지)</label>
+                    <div class="flex items-center gap-2">
+                        <div id="current-address-display" class="flex-1 bg-gray-50 rounded-xl px-4 py-3.5 text-sm text-gray-600 border border-gray-100 truncate">위치 정보 없음</div>
+                        <button onclick="updateLocation()" class="w-12 h-12 rounded-xl bg-gray-900 text-white flex items-center justify-center shadow-md active:scale-95 transition-transform">
+                            <i class="fa-solid fa-location-crosshairs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <label class="block text-xs font-bold text-sub mb-2 ml-1">내 이모지 선택</label>
+                    <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="emoji-list">
+                        <!-- 이모지 버튼들 -->
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="logout()" class="w-full bg-red-50 text-red-500 border border-red-100 font-bold py-4 rounded-2xl active:bg-red-100 transition-colors text-sm fade-in-up delay-200">
+                로그아웃
+            </button>
+        </div>
+
+    </main>
+
+    <!-- 하단 플로팅 메뉴 (index.html 스타일) -->
+    <nav id="bottom-nav" class="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-auto touch-pan-x select-none hidden">
+        <div class="flex items-center bg-white/10 backdrop-blur-[4px] backdrop-saturate-[180%] shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] border border-white/20 rounded-full p-1.5 gap-1 ring-1 ring-white/30 relative">
+            <div id="nav-indicator" class="absolute top-1 bottom-1 bg-white/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] rounded-full backdrop-blur-[2px] border border-white/20 z-0" style="left: 6px; width: 64px;"></div>
+            
+            <button onclick="window.location.href='index.html'" class="relative px-5 py-2 rounded-full group min-w-[64px] z-10 active:scale-95 transition-transform">
+                <div class="flex flex-col items-center gap-0.5 pointer-events-none">
+                    <i class="fa-solid fa-house text-base text-[#4E5968] group-hover:text-gray-900 transition-colors drop-shadow-sm"></i>
+                    <span class="text-[10px] font-medium text-[#4E5968] group-hover:text-gray-900 transition-colors drop-shadow-sm whitespace-nowrap">홈</span>
+                </div>
+            </button>
+
+            <button onclick="switchTab('map')" class="relative px-5 py-2 rounded-full group min-w-[64px] z-10 active:scale-95 transition-transform" id="nav-btn-map">
+                <div class="flex flex-col items-center gap-0.5 pointer-events-none">
+                    <i class="fa-solid fa-map text-base text-[#191F28] drop-shadow-sm transition-colors"></i>
+                    <span class="text-[10px] font-bold text-[#191F28] drop-shadow-sm whitespace-nowrap transition-colors">지도</span>
+                </div>
+            </button>
+
+            <button onclick="switchTab('friends')" class="relative px-5 py-2 rounded-full group min-w-[64px] z-10 active:scale-95 transition-transform" id="nav-btn-friends">
+                <div class="flex flex-col items-center gap-0.5 pointer-events-none">
+                    <i class="fa-solid fa-user-group text-base text-[#4E5968] group-hover:text-gray-900 transition-colors drop-shadow-sm"></i>
+                    <span class="text-[10px] font-medium text-[#4E5968] group-hover:text-gray-900 transition-colors drop-shadow-sm whitespace-nowrap">친구</span>
+                </div>
+            </button>
+
+            <button onclick="switchTab('profile')" class="relative px-5 py-2 rounded-full group min-w-[64px] z-10 active:scale-95 transition-transform" id="nav-btn-profile">
+                <div class="flex flex-col items-center gap-0.5 pointer-events-none">
+                    <i class="fa-solid fa-gear text-base text-[#4E5968] group-hover:text-gray-900 transition-colors drop-shadow-sm"></i>
+                    <span class="text-[10px] font-medium text-[#4E5968] group-hover:text-gray-900 transition-colors drop-shadow-sm whitespace-nowrap">설정</span>
+                </div>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Firebase & App Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, set, onValue, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDse4kjmrO-N8jqHV5sKHQ3T_UrS0eFpYo",
+            authDomain: "friend-map-app.firebaseapp.com",
+            databaseURL: "https://friend-map-app-default-rtdb.firebaseio.com", 
+            projectId: "friend-map-app",
+            storageBucket: "friend-map-app.firebasestorage.app",
+            messagingSenderId: "366133879234",
+            appId: "1:366133879234:web:70d61c54e8767b1a6ef65b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        let currentUser = null;
+        let myName = "";
+        let myEmoji = "🦊";
+        let friendsData = [];
+        let map = null;
+        let markers = [];
+
+        const ALL_MEMBERS = ['전시기', '오스틴', '이진누', '성원제', '류짱', '홍박사'];
+
+        window.onload = () => {
+            checkLogin();
+            setupEmojiList();
+            // 기본 탭 설정
+            moveIndicator(1); // 지도 탭(인덱스 1)
+        };
+
+        window.haptic = function() { if (navigator.vibrate) navigator.vibrate(10); }
+
+        window.checkLogin = () => {
+            const savedName = localStorage.getItem('friendMapUserName');
+            if (savedName) {
+                // UI 변경: 자동 로그인 모드로 전환
+                document.getElementById('login-title').innerText = "자동 로그인 중";
+                document.getElementById('login-desc').innerText = "잠시만 기다려주세요...";
+                document.getElementById('login-form').innerHTML = `
+                    <div class="flex justify-center py-4">
+                        <i class="fa-solid fa-circle-notch fa-spin text-2xl text-blue-500"></i>
+                    </div>
+                `;
+
+                myName = savedName;
+                signIn();
+            } else {
+                document.getElementById('login-modal').classList.remove('hidden');
+            }
+        };
+
+        window.tryLogin = () => {
+            window.haptic();
+            const input = document.getElementById('login-input').value.trim();
+            const errorMsg = document.getElementById('login-error');
+            
+            if (ALL_MEMBERS.includes(input)) {
+                localStorage.setItem('friendMapUserName', input);
+                myName = input;
+                signIn();
+            } else {
+                errorMsg.innerText = "등록된 멤버가 아닙니다.";
+            }
+        };
+
+        function signIn() {
+            signInAnonymously(auth).then(() => {
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('hidden');
+                document.getElementById('app-content').classList.add('flex');
+                document.getElementById('bottom-nav').classList.remove('hidden');
+                document.getElementById('profile-name').innerText = myName;
+                startListening();
+                switchTab('map');
+            }).catch((error) => {
+                alert("로그인 오류: " + error.message);
+            });
+        }
+
+        window.logout = () => {
+            window.haptic();
+            if(confirm('로그아웃 하시겠습니까?')) {
+                localStorage.removeItem('friendMapUserName');
+                location.reload();
+            }
+        };
+
+        function startListening() {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    
+                    const dbRef = ref(database);
+                    get(child(dbRef, `friend_locations/${myName}`)).then((snapshot) => {
+                        if (snapshot.exists()) {
+                            const data = snapshot.val();
+                            if(data.emoji) {
+                                myEmoji = data.emoji;
+                                setupEmojiList(); // 이모지 선택 UI 갱신
+                            }
+                        }
+                        updateLocation(true);
+                    }).catch((error) => {
+                        console.error(error);
+                        updateLocation(true);
+                    });
+
+                    setInterval(() => { updateLocation(true); }, 180000); 
+
+                    const friendsRef = ref(database, 'friend_locations');
+                    onValue(friendsRef, (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            friendsData = Object.values(data);
+                        } else {
+                            friendsData = [];
+                        }
+
+                        const myInfo = friendsData.find(f => f.displayName === myName);
+                        if (myInfo) {
+                            if (myInfo.emoji) myEmoji = myInfo.emoji;
+                            if (myInfo.address) document.getElementById('current-address-display').innerText = myInfo.address;
+                        }
+                        
+                        renderFriends();
+                        updateMapMarkers();
+                    });
+                }
+            });
+        }
+
+        window.updateLocation = (silent = false) => {
+            window.haptic();
+            if (!currentUser) return;
+            
+            const refreshIcon = document.getElementById('refresh-icon');
+
+            if (!silent) {
+                refreshIcon.classList.add('fa-spin');
+            }
+
+            if (!navigator.geolocation) {
+                if (!silent) {
+                    alert("위치 정보를 지원하지 않는 브라우저입니다.");
+                    refreshIcon.classList.remove('fa-spin');
+                }
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                let address = "위치 확인 불가";
+
+                try {
+                    if (typeof naver !== 'undefined' && naver.maps && naver.maps.Service) {
+                        await new Promise((resolve) => {
+                            naver.maps.Service.reverseGeocode({
+                                coords: new naver.maps.LatLng(latitude, longitude),
+                                orders: [naver.maps.Service.OrderType.ADDR, naver.maps.Service.OrderType.ROAD_ADDR].join(',')
+                            }, function(status, response) {
+                                if (status === naver.maps.Service.Status.OK) {
+                                    try {
+                                        const item = response.v2.results[0];
+                                        const region1 = item.region.area1.name; 
+                                        const region2 = item.region.area2.name; 
+                                        address = `${region1} ${region2}`;
+                                    } catch(e) { console.log(e); }
+                                }
+                                resolve();
+                            });
+                        });
+                    }
+                } catch(e) { console.log("Geocoding Error", e); }
+
+                try {
+                    await set(ref(database, 'friend_locations/' + myName), {
+                        uid: currentUser.uid,
+                        displayName: myName,
+                        emoji: myEmoji,
+                        address: address, 
+                        latitude,
+                        longitude,
+                        timestamp: Date.now()
+                    });
+                    
+                    if (!silent) {
+                        refreshIcon.classList.remove('fa-spin');
+                        alert(`내 위치가 업데이트 되었습니다!\n(${address})`);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    if (!silent) {
+                        alert("전송 실패");
+                        refreshIcon.classList.remove('fa-spin');
+                    }
+                }
+            }, (err) => {
+                console.error(err);
+                if (!silent) {
+                    alert("위치 권한을 허용해주세요.");
+                    refreshIcon.classList.remove('fa-spin');
+                }
+            });
+        };
+
+        function renderFriends() {
+            const grid = document.getElementById('friends-grid');
+            const mapCount = document.getElementById('map-count');
+            const now = Date.now();
+            
+            const onlineCount = friendsData.filter(f => f.timestamp && (now - f.timestamp) < 600000).length;
+            
+            mapCount.innerText = onlineCount;
+            if(document.getElementById('list-count')) document.getElementById('list-count').innerText = friendsData.length;
+            grid.innerHTML = "";
+
+            ALL_MEMBERS.forEach(name => {
+                const friend = friendsData.find(f => f.displayName === name) || {};
+                const isMe = name === myName;
+                
+                const hasData = friend.latitude !== undefined;
+                const emoji = friend.emoji || (isMe && myEmoji ? myEmoji : '👤');
+                
+                let isOnline = false;
+                let infoStr = "위치 정보 없음";
+                let timeClass = "text-gray-400";
+                
+                if (hasData && friend.timestamp) {
+                    const date = new Date(friend.timestamp);
+                    const diff = now - friend.timestamp;
+                    isOnline = diff < 10 * 60 * 1000; // 10분 이내 접속
+                    
+                    const timeStr = date.toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+                    const addr = friend.address || "주소 미상";
+                    infoStr = `${addr} · ${timeStr}`;
+                    
+                    if(isOnline) timeClass = "text-blue-500 font-bold";
+                }
+
+                // 토스 스타일 리스트 아이템
+                grid.innerHTML += `
+                <div class="toss-card p-4 flex items-center gap-4 group" ${hasData ? `onclick="window.haptic(); showOnMap(${friend.latitude}, ${friend.longitude})"` : ''}>
+                    <div class="relative w-12 h-12 flex-shrink-0 bg-gray-50 rounded-[20px] flex items-center justify-center text-2xl border border-gray-100 shadow-sm group-active:scale-95 transition-transform">
+                        ${emoji}
+                        <div class="absolute -bottom-1 -right-1 flex items-center justify-center">
+                            ${isOnline ? '<span class="online-dot"></span>' : '<span class="offline-dot"></span>'}
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                            <h4 class="font-bold text-main text-base truncate">${name}</h4>
+                            ${isMe ? '<span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-1.5 py-0.5 rounded">나</span>' : ''}
+                        </div>
+                        <p class="text-xs text-sub truncate ${hasData ? '' : 'opacity-50'}">${infoStr}</p>
+                    </div>
+                    ${hasData ? `<div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-blue-500 group-hover:bg-blue-50 transition-colors"><i class="fa-solid fa-location-dot text-sm"></i></div>` : ''}
+                </div>`;
+            });
+        }
+
+        // 탭 전환 및 네비게이션 인디케이터 제어
+        window.switchTab = (tabName) => {
+            window.haptic();
+            const tabs = ['map', 'friends', 'profile'];
+            
+            tabs.forEach(t => {
+                const el = document.getElementById('view-' + t);
+                if(t === tabName) {
+                    el.classList.remove('hidden');
+                    // 재진입 시 애니메이션 효과를 위해 클래스 재적용
+                    el.querySelectorAll('.fade-in-up').forEach(node => {
+                        node.style.animation = 'none';
+                        node.offsetHeight; /* trigger reflow */
+                        node.style.animation = null; 
+                    });
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            if(tabName === 'map') {
+                moveIndicator(1);
+                updateNavStyles('map');
+                setTimeout(initMap, 100);
+            } else if(tabName === 'friends') {
+                moveIndicator(2);
+                updateNavStyles('friends');
+            } else if(tabName === 'profile') {
+                moveIndicator(3);
+                updateNavStyles('profile');
+            }
+        };
+
+        function updateNavStyles(activeTab) {
+            const btns = ['map', 'friends', 'profile'];
+            btns.forEach(b => {
+                const btn = document.getElementById('nav-btn-' + b);
+                const icon = btn.querySelector('i');
+                const text = btn.querySelector('span');
+                
+                if (b === activeTab) {
+                    icon.className = icon.className.replace('text-[#4E5968]', 'text-[#191F28]').replace('text-gray-400', 'text-[#191F28]');
+                    text.className = text.className.replace('font-medium', 'font-bold').replace('text-[#4E5968]', 'text-[#191F28]').replace('text-gray-400', 'text-[#191F28]');
+                    // FontAwesome solid/regular 전환이 필요하다면 여기서 처리
+                } else {
+                    icon.className = icon.className.replace('text-[#191F28]', 'text-[#4E5968]');
+                    text.className = text.className.replace('font-bold', 'font-medium').replace('text-[#191F28]', 'text-[#4E5968]');
+                }
+            });
+        }
+
+        function moveIndicator(index) {
+            const ind = document.getElementById('nav-indicator');
+            // 홈(0), 지도(1), 친구(2), 설정(3)
+            // 각 버튼 너비 약 64px, gap 고려하여 위치 계산
+            // 버튼 요소들을 직접 가져와서 계산하는 것이 정확함
+            const btns = document.querySelectorAll('#bottom-nav button');
+            if(btns[index]) {
+                const targetBtn = btns[index];
+                ind.style.width = `${targetBtn.offsetWidth}px`;
+                ind.style.transform = `translateX(${targetBtn.offsetLeft - 6}px)`;
+            }
+        }
+
+        function initMap() {
+            if (map || typeof naver === 'undefined') return;
+            const mapOptions = {
+                center: new naver.maps.LatLng(36.5, 127.8),
+                zoom: 7,
+                scaleControl: false, logoControl: false, mapDataControl: false, zoomControl: false
+            };
+            map = new naver.maps.Map('map', mapOptions);
+            updateMapMarkers();
+        }
+
+        function updateMapMarkers() {
+            if (!map || typeof naver === 'undefined') return;
+            markers.forEach(m => m.setMap(null));
+            markers = [];
+            friendsData.forEach(f => {
+                if (f.latitude && f.longitude) {
+                    const position = new naver.maps.LatLng(f.latitude, f.longitude);
+                    const contentHtml = `
+                        <div class="marker-wrapper">
+                            <div class="emoji-marker">${f.emoji || '🙂'}</div>
+                            <div class="marker-name">${f.displayName}</div>
+                        </div>`;
+                    const marker = new naver.maps.Marker({
+                        position: position, map: map,
+                        icon: { content: contentHtml, size: new naver.maps.Size(44, 60), anchor: new naver.maps.Point(22, 22) }
+                    });
+                    markers.push(marker);
+                }
+            });
+        }
+
+        window.showOnMap = (lat, lng) => {
+            switchTab('map');
+            setTimeout(() => {
+                if(map && typeof naver !== 'undefined') {
+                    const moveLatLon = new naver.maps.LatLng(lat, lng);
+                    map.setCenter(moveLatLon); map.setZoom(16);
+                }
+            }, 300);
+        };
+
+        function setupEmojiList() {
+            const emojis = ["🦊", "🐰", "🐸", "🐯", "🐶", "🐱", "🐼", "🐨", "🦄", "🐵"];
+            const container = document.getElementById('emoji-list');
+            container.innerHTML = emojis.map(e => {
+                const isSelected = e === myEmoji;
+                const bgClass = isSelected ? "bg-blue-100 border-blue-200" : "bg-white border-gray-100";
+                return `<button onclick="setEmoji('${e}')" class="text-2xl w-12 h-12 flex-shrink-0 rounded-2xl border ${bgClass} flex items-center justify-center shadow-sm active:scale-90 transition-all">${e}</button>`;
+            }).join('');
+        }
+        
+        window.setEmoji = (e) => {
+            window.haptic();
+            myEmoji = e;
+            setupEmojiList(); // 선택 상태 UI 갱신
+        };
+    </script>
+</body>
+</html>
