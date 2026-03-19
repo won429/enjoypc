@@ -134,8 +134,8 @@
     <nav id="top-nav" class="fixed top-0 left-0 right-0 z-50 flex justify-center bg-black/80 backdrop-blur-xl border-b border-white/5 h-12">
         <div class="flex items-center justify-between w-full px-8 md:px-12 h-full">
             <!-- 로고 -->
-            <div class="text-[22px] font-black text-white tracking-tighter cursor-pointer" onclick="window.haptic(); window.goHome()">
-                ENJOY<span class="text-blue-500">.</span>
+            <div class="text-[22px] font-black text-white cursor-pointer" onclick="window.haptic(); window.goHome()">
+                엔조이<span class="text-blue-500">.</span>
             </div>
             
             <!-- 메뉴 컨테이너 -->
@@ -427,15 +427,21 @@
             </div>
         </div>
 
-        <!-- 대전충남 & 대구경북 통합 탭 브이로그 섹션 -->
+        <!-- 지역 통합 탭 브이로그 섹션 -->
         <div class="mb-10 fade-in-up delay-200">
             <!-- 탭 헤더 -->
-            <div class="flex items-baseline gap-6 mb-6 px-2">
-                <button onclick="window.haptic(); window.switchVlogTab('daejeon')" id="tab-daejeon" class="text-[26px] font-bold text-main transition-colors tracking-tight flex items-baseline">
+            <div class="flex items-baseline gap-6 mb-6 px-2 overflow-x-auto scrollbar-hide whitespace-nowrap">
+                <button onclick="window.haptic(); window.switchVlogTab('daejeon')" id="tab-daejeon" class="text-[26px] font-bold text-main transition-colors tracking-tight flex items-baseline shrink-0">
                     대전충남 브이로그<span id="dot-daejeon" class="text-[#3182F6] ml-1 font-black">.</span>
                 </button>
-                <button onclick="window.haptic(); window.switchVlogTab('daegu')" id="tab-daegu" class="text-[26px] font-bold text-[#8B95A1] transition-colors tracking-tight flex items-baseline">
+                <button onclick="window.haptic(); window.switchVlogTab('daegu')" id="tab-daegu" class="text-[26px] font-bold text-[#8B95A1] transition-colors tracking-tight flex items-baseline shrink-0">
                     대구경북 브이로그<span id="dot-daegu" class="text-[#3182F6] ml-1 font-black hidden">.</span>
+                </button>
+                <button onclick="window.haptic(); window.switchVlogTab('gyeongnam')" id="tab-gyeongnam" class="text-[26px] font-bold text-[#8B95A1] transition-colors tracking-tight flex items-baseline shrink-0">
+                    경남 브이로그<span id="dot-gyeongnam" class="text-[#3182F6] ml-1 font-black hidden">.</span>
+                </button>
+                <button onclick="window.haptic(); window.switchVlogTab('jeju')" id="tab-jeju" class="text-[26px] font-bold text-[#8B95A1] transition-colors tracking-tight flex items-baseline shrink-0">
+                    제주 브이로그<span id="dot-jeju" class="text-[#3182F6] ml-1 font-black hidden">.</span>
                 </button>
             </div>
             
@@ -481,53 +487,8 @@
                 </div>
             </div>
 
-            <!-- 탭 전환 스크립트 -->
-            <script>
-                window.switchVlogTab = function(tab) {
-                    const tDaejeon = document.getElementById('tab-daejeon');
-                    const tDaegu = document.getElementById('tab-daegu');
-                    const dDaejeon = document.getElementById('dot-daejeon');
-                    const dDaegu = document.getElementById('dot-daegu');
-                    const cDaejeon = document.getElementById('content-daejeon');
-                    const cDaegu = document.getElementById('content-daegu');
-                    
-                    if(tab === 'daejeon') {
-                        tDaejeon.className = "text-[26px] font-bold text-main transition-colors tracking-tight flex items-baseline";
-                        dDaejeon.classList.remove('hidden');
-                        tDaegu.className = "text-[26px] font-bold text-[#8B95A1] transition-colors tracking-tight flex items-baseline";
-                        dDaegu.classList.add('hidden');
-                        
-                        cDaejeon.classList.remove('hidden');
-                        cDaejeon.classList.add('flex');
-                        cDaegu.classList.add('hidden');
-                        cDaegu.classList.remove('flex');
-                    } else {
-                        tDaegu.className = "text-[26px] font-bold text-main transition-colors tracking-tight flex items-baseline";
-                        dDaegu.classList.remove('hidden');
-                        tDaejeon.className = "text-[26px] font-bold text-[#8B95A1] transition-colors tracking-tight flex items-baseline";
-                        dDaejeon.classList.add('hidden');
-                        
-                        cDaegu.classList.remove('hidden');
-                        cDaegu.classList.add('flex');
-                        cDaejeon.classList.add('hidden');
-                        cDaejeon.classList.remove('flex');
-                    }
-                };
-            </script>
-        </div>
-
-        <!-- 경남 & 제주 통합 탭 브이로그 섹션 -->
-        <div class="mb-10 fade-in-up delay-200">
-            <div class="flex items-baseline gap-6 mb-6 px-2">
-                <button onclick="window.haptic(); window.switchGyeongnamJejuTab('gyeongnam')" id="tab-gyeongnam" class="text-[26px] font-bold text-main transition-colors tracking-tight flex items-baseline">
-                    경남 브이로그<span id="dot-gyeongnam" class="text-[#3182F6] ml-1 font-black">.</span>
-                </button>
-                <button onclick="window.haptic(); window.switchGyeongnamJejuTab('jeju')" id="tab-jeju" class="text-[26px] font-bold text-[#8B95A1] transition-colors tracking-tight flex items-baseline">
-                    제주 브이로그<span id="dot-jeju" class="text-[#3182F6] ml-1 font-black hidden">.</span>
-                </button>
-            </div>
-            
-            <div id="content-gyeongnam" class="flex overflow-x-auto gap-6 pb-6 scrollbar-hide snap-x snap-mandatory">
+            <!-- 경남 컨텐츠 -->
+            <div id="content-gyeongnam" class="hidden overflow-x-auto gap-6 pb-6 scrollbar-hide snap-x snap-mandatory">
                 <div onclick="window.haptic(); window.openBrowser('https://www.youtube.com/@enjoy_trip')" class="min-w-[340px] w-[340px] snap-start group cursor-pointer">
                     <div class="relative aspect-video rounded-[24px] overflow-hidden shadow-lg bg-[#111]">
                         <img src="coming_1.jpg" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="엔조이 인기가요 2" onerror="this.src='https://placehold.co/640x360/111/FFF?text=Ready'">
@@ -549,6 +510,7 @@
                 </div>
             </div>
 
+            <!-- 제주 컨텐츠 -->
             <div id="content-jeju" class="hidden overflow-x-auto gap-6 pb-6 scrollbar-hide snap-x snap-mandatory">
                 <div onclick="window.haptic(); window.openBrowser('https://www.youtube.com/playlist?list=PL6V2mJA2-n8rssJc8wQE3jvPGqAFP_yQs&jct=OCpt0PxmET_Ej_etMpY-lw')" class="min-w-[340px] w-[340px] snap-start group cursor-pointer">
                     <div class="relative aspect-video rounded-[24px] overflow-hidden shadow-lg bg-[#111]">
@@ -579,36 +541,30 @@
                 </div>
             </div>
 
+            <!-- 통합 탭 전환 스크립트 -->
             <script>
-                window.switchGyeongnamJejuTab = function(tab) {
-                    const tGyeongnam = document.getElementById('tab-gyeongnam');
-                    const tJeju = document.getElementById('tab-jeju');
-                    const dGyeongnam = document.getElementById('dot-gyeongnam');
-                    const dJeju = document.getElementById('dot-jeju');
-                    const cGyeongnam = document.getElementById('content-gyeongnam');
-                    const cJeju = document.getElementById('content-jeju');
+                window.switchVlogTab = function(tab) {
+                    const tabs = ['daejeon', 'daegu', 'gyeongnam', 'jeju'];
                     
-                    if(tab === 'gyeongnam') {
-                        tGyeongnam.className = "text-[26px] font-bold text-main transition-colors tracking-tight flex items-baseline";
-                        dGyeongnam.classList.remove('hidden');
-                        tJeju.className = "text-[26px] font-bold text-[#8B95A1] transition-colors tracking-tight flex items-baseline";
-                        dJeju.classList.add('hidden');
+                    tabs.forEach(t => {
+                        const btn = document.getElementById('tab-' + t);
+                        const dot = document.getElementById('dot-' + t);
+                        const content = document.getElementById('content-' + t);
                         
-                        cGyeongnam.classList.remove('hidden');
-                        cGyeongnam.classList.add('flex');
-                        cJeju.classList.add('hidden');
-                        cJeju.classList.remove('flex');
-                    } else {
-                        tJeju.className = "text-[26px] font-bold text-main transition-colors tracking-tight flex items-baseline";
-                        dJeju.classList.remove('hidden');
-                        tGyeongnam.className = "text-[26px] font-bold text-[#8B95A1] transition-colors tracking-tight flex items-baseline";
-                        dGyeongnam.classList.add('hidden');
+                        if (!btn || !dot || !content) return;
                         
-                        cJeju.classList.remove('hidden');
-                        cJeju.classList.add('flex');
-                        cGyeongnam.classList.add('hidden');
-                        cGyeongnam.classList.remove('flex');
-                    }
+                        if (t === tab) {
+                            btn.className = "text-[26px] font-bold text-main transition-colors tracking-tight flex items-baseline shrink-0";
+                            dot.classList.remove('hidden');
+                            content.classList.remove('hidden');
+                            content.classList.add('flex');
+                        } else {
+                            btn.className = "text-[26px] font-bold text-[#8B95A1] transition-colors tracking-tight flex items-baseline shrink-0";
+                            dot.classList.add('hidden');
+                            content.classList.add('hidden');
+                            content.classList.remove('flex');
+                        }
+                    });
                 };
             </script>
         </div>
