@@ -131,7 +131,7 @@
 <body class="w-full h-[100dvh] flex flex-col overflow-hidden bg-black" ontouchstart="">
 
     <!-- 상단 탭 메뉴 (PC 버전) -->
-    <nav id="top-nav" class="fixed top-0 left-0 right-0 z-50 flex justify-center bg-black/80 backdrop-blur-xl border-b border-white/5 h-10">
+    <nav id="top-nav" class="fixed top-0 left-0 right-0 z-50 flex justify-center bg-black border-b border-white/5 h-10">
         <div class="flex items-center justify-between w-full px-8 md:px-12 h-full">
             <!-- 로고 -->
             <div class="text-[22px] font-black text-white cursor-pointer" onclick="window.haptic(); window.goHome()">
@@ -156,6 +156,10 @@
                 
                 <button id="nav-music" class="relative px-5 py-1 group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.goToMusic()">
                     <span class="text-[15px] font-medium text-gray-400 group-hover:text-white transition-colors relative z-10">음악</span>
+                </button>
+
+                <button id="nav-map" class="relative px-5 py-1 group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.openBrowser('https://won429.github.io/bus/')">
+                    <span class="text-[15px] font-medium text-gray-400 group-hover:text-white transition-colors relative z-10">여행지도</span>
                 </button>
 
                 <button id="nav-more" class="relative px-5 py-1 group z-10 active:scale-95 transition-transform" onclick="window.haptic(); window.goMore()">
@@ -1747,21 +1751,21 @@
                 
                 if (i === index) {
                     if (icon) {
-                        icon.classList.remove('text-gray-300');
+                        icon.classList.remove('text-gray-300', 'text-gray-400');
                         icon.classList.add('text-white');
                     }
                     if (label) {
-                        label.classList.remove('text-gray-300', 'font-medium');
+                        label.classList.remove('text-gray-300', 'text-gray-400', 'font-medium');
                         label.classList.add('text-white', 'font-bold');
                     }
                 } else {
                     if (icon) {
                         icon.classList.remove('text-white');
-                        icon.classList.add('text-gray-300');
+                        icon.classList.add('text-gray-400');
                     }
                     if (label) {
                         label.classList.remove('text-white', 'font-bold');
-                        label.classList.add('text-gray-300', 'font-medium');
+                        label.classList.add('text-gray-400', 'font-medium');
                     }
                 }
             });
