@@ -113,8 +113,8 @@
                                 <i class="fa-solid fa-file-powerpoint text-[#F24E1E] text-lg"></i>
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-[14px] font-bold text-white truncate max-w-[180px]">Q3_회사_소개서_최종.pptx</span>
-                                <span class="text-[11px] text-gray-500 font-medium">4.2 MB</span>
+                                <span id="selected-file-name" class="text-[14px] font-bold text-white truncate max-w-[180px]">Q3_회사_소개서_최종.pptx</span>
+                                <span id="selected-file-size" class="text-[11px] text-gray-500 font-medium">4.2 MB</span>
                             </div>
                         </div>
                         <button onclick="clearFiles()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-sm"></i></button>
@@ -159,70 +159,11 @@
             <div class="w-full pt-main px-5">
                 <div class="flex justify-between items-center mb-5">
                     <h2 class="text-[22px] font-black text-white tracking-tight">최근 변환 내역</h2>
-                    <span class="text-[11px] font-bold text-gray-500 bg-[#1C1C1E] px-2.5 py-1 rounded-lg">총 4개</span>
+                    <span id="history-count" class="text-[11px] font-bold text-gray-500 bg-[#1C1C1E] px-2.5 py-1 rounded-lg">총 0개</span>
                 </div>
                 
                 <div class="flex flex-col gap-3" id="history-list">
-                    <!-- 히스토리 카드 (야구 팝업 카드 스타일 그대로 차용) -->
-                    <div class="bg-[#1C1C1E] rounded-[20px] p-4 flex flex-col cursor-pointer active:scale-[0.98] transition-transform shadow-sm border border-white/5" onclick="openFileDetails('Q3_기획안')">
-                        <div class="flex justify-between items-center border-b border-white/5 pb-3 mb-3">
-                            <span class="text-[11px] font-bold text-gray-400"><i class="fa-regular fa-calendar mr-1.5"></i>2026.04.13 14:30</span>
-                            <span class="text-[10px] font-bold text-white bg-green-600/80 px-2 py-0.5 rounded">완료</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3 w-full">
-                                <div class="w-10 h-10 rounded-xl bg-[#2A2A2C] flex items-center justify-center shrink-0">
-                                    <i class="fa-solid fa-file-pdf text-red-500 text-xl"></i>
-                                </div>
-                                <div class="flex flex-col flex-1 truncate">
-                                    <span class="text-[15px] font-bold text-white truncate">Q3_기획안_최종본.pdf</span>
-                                    <span class="text-[12px] text-gray-500 mt-0.5">3.2 MB • 원본: PPTX</span>
-                                </div>
-                                <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 shrink-0">
-                                    <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-[#1C1C1E] rounded-[20px] p-4 flex flex-col cursor-pointer active:scale-[0.98] transition-transform shadow-sm border border-white/5" onclick="openFileDetails('프로젝트')">
-                        <div class="flex justify-between items-center border-b border-white/5 pb-3 mb-3">
-                            <span class="text-[11px] font-bold text-gray-400"><i class="fa-regular fa-calendar mr-1.5"></i>2026.04.12 09:15</span>
-                            <span class="text-[10px] font-bold text-white bg-green-600/80 px-2 py-0.5 rounded">완료</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3 w-full">
-                                <div class="w-10 h-10 rounded-xl bg-[#2A2A2C] flex items-center justify-center shrink-0">
-                                    <i class="fa-solid fa-file-pdf text-red-500 text-xl"></i>
-                                </div>
-                                <div class="flex flex-col flex-1 truncate">
-                                    <span class="text-[15px] font-bold text-white truncate">프로젝트_킥오프_회의자료.pdf</span>
-                                    <span class="text-[12px] text-gray-500 mt-0.5">12.5 MB • 원본: PPT</span>
-                                </div>
-                                <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 shrink-0">
-                                    <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-[#1C1C1E] rounded-[20px] p-4 flex flex-col cursor-pointer active:scale-[0.98] transition-transform shadow-sm border border-white/5">
-                        <div class="flex justify-between items-center border-b border-white/5 pb-3 mb-3">
-                            <span class="text-[11px] font-bold text-gray-400"><i class="fa-regular fa-calendar mr-1.5"></i>2026.04.10 18:40</span>
-                            <span class="text-[10px] font-bold text-white bg-red-600/80 px-2 py-0.5 rounded">실패</span>
-                        </div>
-                        <div class="flex items-center justify-between opacity-60">
-                            <div class="flex items-center gap-3 w-full">
-                                <div class="w-10 h-10 rounded-xl bg-[#2A2A2C] flex items-center justify-center shrink-0">
-                                    <i class="fa-solid fa-file-excel text-gray-500 text-xl"></i>
-                                </div>
-                                <div class="flex flex-col flex-1 truncate">
-                                    <span class="text-[15px] font-bold text-white truncate line-through">지원하지_않는_포맷.xlsx</span>
-                                    <span class="text-[12px] text-red-400 mt-0.5">포맷 에러</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- 자바스크립트로 동적 렌더링 됩니다 -->
                 </div>
             </div>
         </main>
@@ -279,7 +220,7 @@
             <div class="flex justify-between items-start border-b border-white/5 pb-4 mb-4">
                 <div class="flex flex-col gap-1.5 w-[85%]">
                     <span id="sheet-title" class="text-[18px] font-black text-white tracking-tight truncate">Q3_기획안_최종본.pdf</span>
-                    <span class="text-[12px] font-bold text-gray-400">2026.04.13 14:30 변환됨</span>
+                    <span id="sheet-date" class="text-[12px] font-bold text-gray-400">2026.04.13 14:30 변환됨</span>
                 </div>
                 <button onclick="closeBottomSheet()" class="w-8 h-8 rounded-full bg-[#2A2A2C] flex items-center justify-center text-white active:scale-95 transition-transform"><i class="fa-solid fa-xmark text-sm"></i></button>
             </div>
@@ -287,22 +228,22 @@
             <div class="flex justify-around items-center mb-6 bg-[#242426] p-4 rounded-2xl">
                 <div class="flex flex-col items-center gap-1.5">
                     <span class="text-[10px] font-bold text-gray-500">원본 크기</span>
-                    <span class="text-[15px] font-black text-white">4.2 MB</span>
+                    <span id="sheet-original-size" class="text-[15px] font-black text-white">4.2 MB</span>
                 </div>
                 <div class="w-px h-8 bg-white/10"></div>
                 <div class="flex flex-col items-center gap-1.5">
                     <span class="text-[10px] font-bold text-gray-500">PDF 크기</span>
-                    <span class="text-[15px] font-black text-point">3.2 MB</span>
+                    <span id="sheet-pdf-size" class="text-[15px] font-black text-point">3.2 MB</span>
                 </div>
                 <div class="w-px h-8 bg-white/10"></div>
                 <div class="flex flex-col items-center gap-1.5">
                     <span class="text-[10px] font-bold text-gray-500">페이지 수</span>
-                    <span class="text-[15px] font-black text-white">24장</span>
+                    <span class="text-[15px] font-black text-white">알 수 없음</span>
                 </div>
             </div>
             
             <div class="flex flex-col gap-2.5">
-                <button onclick="showToast('다운로드가 시작됩니다.'); closeBottomSheet()" class="w-full py-3.5 rounded-xl bg-point text-[15px] font-bold text-white active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <button onclick="downloadPdf(); closeBottomSheet()" class="w-full py-3.5 rounded-xl bg-point text-[15px] font-bold text-white active:scale-95 transition-transform flex items-center justify-center gap-2">
                     <i class="fa-solid fa-download"></i> 디바이스에 저장
                 </button>
                 <button onclick="showToast('공유 링크가 복사되었습니다.')" class="w-full py-3.5 rounded-xl bg-[#2A2A2C] text-[15px] font-bold text-white active:scale-95 transition-transform flex items-center justify-center gap-2">
@@ -346,6 +287,9 @@
         let currentTabIndex = 0;
         let selectedMode = 'single';
         let isFileSelected = false;
+        let currentFile = null;
+        let conversionHistory = [];
+        let currentSheetItem = null;
 
         function showToast(msg) {
             let toast = document.getElementById('toast-msg');
@@ -360,7 +304,6 @@
             }, 2000);
         }
 
-        // 기존의 탭 전환 로직 완벽히 재활용
         function switchTab(index) {
             currentTabIndex = index; 
             if (navigator.vibrate) navigator.vibrate(10);
@@ -410,7 +353,6 @@
             });
         }
 
-        // 상단 컨트롤러 버튼 (단일/다중)
         function setConvertMode(mode) {
             selectedMode = mode;
             ['single', 'batch'].forEach(id => { 
@@ -423,10 +365,61 @@
             targetBtn.classList.add('font-bold', 'bg-point', 'text-white', 'shadow-sm');
         }
 
-        // 파일 선택 시 UI 변경 로직 (가짜 동작)
+        // 날짜 포맷 변환 함수
+        function formatDate(date) {
+            const pad = n => n < 10 ? '0'+n : n;
+            return `${date.getFullYear()}.${pad(date.getMonth()+1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        // 히스토리 동적 렌더링 함수
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            const count = document.getElementById('history-count');
+            count.innerText = `총 ${conversionHistory.length}개`;
+            list.innerHTML = '';
+            
+            if (conversionHistory.length === 0) {
+                list.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-gray-500"><i class="fa-solid fa-clock-rotate-left text-4xl mb-4 opacity-30"></i><span class="text-[14px]">최근 변환 기록이 없습니다.</span></div>`;
+                return;
+            }
+
+            conversionHistory.forEach(item => {
+                list.innerHTML += `
+                <div class="bg-[#1C1C1E] rounded-[20px] p-4 flex flex-col cursor-pointer active:scale-[0.98] transition-transform shadow-sm border border-white/5" onclick="openFileDetails(${item.id})">
+                    <div class="flex justify-between items-center border-b border-white/5 pb-3 mb-3">
+                        <span class="text-[11px] font-bold text-gray-400"><i class="fa-regular fa-calendar mr-1.5"></i>${formatDate(item.date)}</span>
+                        <span class="text-[10px] font-bold text-white bg-green-600/80 px-2 py-0.5 rounded">완료</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3 w-full">
+                            <div class="w-10 h-10 rounded-xl bg-[#2A2A2C] flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-file-pdf text-red-500 text-xl"></i>
+                            </div>
+                            <div class="flex flex-col flex-1 truncate">
+                                <span class="text-[15px] font-bold text-white truncate">${item.pdfName}</span>
+                                <span class="text-[12px] text-gray-500 mt-0.5">${item.pdfSize} MB • 원본: PPTX</span>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 shrink-0">
+                                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        // 파일 선택 시
         function handleFileSelect(e) {
             const file = e.target.files[0];
-            if(file || !isFileSelected) {
+            if(file) {
+                currentFile = {
+                    name: file.name,
+                    size: (file.size / 1024 / 1024).toFixed(2)
+                };
+                
+                document.getElementById('selected-file-name').innerText = currentFile.name;
+                document.getElementById('selected-file-size').innerText = currentFile.size + ' MB';
+
                 document.getElementById('dropzone').classList.add('hidden');
                 document.getElementById('selected-files').classList.remove('hidden');
                 document.getElementById('selected-files').classList.add('flex');
@@ -447,9 +440,9 @@
             const btn = document.getElementById('btn-convert');
             btn.classList.add('opacity-50', 'pointer-events-none');
             isFileSelected = false;
+            currentFile = null;
         }
 
-        // 변환 진행 시뮬레이션
         function startConversion() {
             document.getElementById('selected-files').classList.add('hidden');
             document.getElementById('selected-files').classList.remove('flex');
@@ -468,6 +461,21 @@
                 if(width >= 100) {
                     width = 100;
                     clearInterval(interval);
+                    
+                    // 변환 완료 시 실제 히스토리 기록 생성
+                    const pdfSize = (parseFloat(currentFile.size) * 0.78).toFixed(2); // 압축 시뮬레이션
+                    const historyItem = {
+                        id: Date.now(),
+                        originalName: currentFile.name,
+                        pdfName: currentFile.name.replace(/\.[^/.]+$/, "") + ".pdf",
+                        originalSize: currentFile.size,
+                        pdfSize: pdfSize,
+                        date: new Date()
+                    };
+                    conversionHistory.unshift(historyItem); // 맨 앞에 추가
+                    currentSheetItem = historyItem; // 다운로드 버튼을 위한 상태 할당
+                    renderHistory(); // UI 업데이트
+
                     setTimeout(() => {
                         progContainer.classList.add('hidden');
                         progContainer.classList.remove('flex');
@@ -478,7 +486,7 @@
                 }
                 progBar.style.width = width + '%';
                 progText.innerText = width + '%';
-            }, 300);
+            }, 150); // 게이지 속도
         }
 
         function resetUpload() {
@@ -493,12 +501,38 @@
             clearFiles();
         }
 
+        // 실제 파일 다운로드 트리거 (가상의 Blob PDF 파일 생성)
         function downloadPdf() {
-            showToast('PDF 파일 다운로드가 시작되었습니다.');
+            if (!currentSheetItem) return;
+            
+            showToast('PDF 다운로드가 완료되었습니다.');
+            
+            // 백엔드가 없으므로, 실제 다운로드를 동작시키기 위한 가짜 텍스트 Blob 생성
+            const blob = new Blob(['[Simulated PDF Document generated by ConvertPro]\nFile: ' + currentSheetItem.pdfName], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = currentSheetItem.pdfName;
+            document.body.appendChild(a);
+            a.click();
+            
+            // 브라우저 메모리 관리
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
         }
 
-        // 바텀 시트 열기 (야구 앱의 경기 클릭 로직 재활용)
-        function openFileDetails(fileName) {
+        // 클릭된 기록의 바텀 시트 열람
+        function openFileDetails(id) {
+            currentSheetItem = conversionHistory.find(item => item.id === id);
+            if(!currentSheetItem) return;
+            
+            document.getElementById('sheet-title').innerText = currentSheetItem.pdfName;
+            document.getElementById('sheet-date').innerText = formatDate(currentSheetItem.date) + ' 변환됨';
+            document.getElementById('sheet-original-size').innerText = currentSheetItem.originalSize + ' MB';
+            document.getElementById('sheet-pdf-size').innerText = currentSheetItem.pdfSize + ' MB';
+            
             const sheet = document.getElementById('bottom-sheet');
             sheet.classList.add('show');
         }
@@ -514,9 +548,9 @@
         dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('dragover'); });
         dropzone.addEventListener('drop', (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); handleFileSelect({target: {files: e.dataTransfer.files}}); });
 
-        // 초기 탭 설정
         window.onload = () => {
             switchTab(0);
+            renderHistory(); // 비어있는 히스토리 렌더링
         };
     </script>
 </body>
