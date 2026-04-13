@@ -242,12 +242,11 @@
             if (!grid) return; 
             let html = '';
             mockDocuments.forEach(doc => { 
-                // 비율에 따른 동적 크기 조절 (가로형 / 세로형 유지)
                 const isLandscape = doc.aspectRatio > 1.2;
                 const aspectClass = isLandscape ? 'aspect-[4/3]' : 'aspect-[3/4]';
                 
                 html += `
-                <div class="flex flex-col cursor-pointer group" onclick="openCanvas(true)">
+                <div class="flex flex-col cursor-pointer group" onclick="resumeRecentDocument()">
                     <div class="doc-thumb ${aspectClass} shadow-[0_2px_10px_rgba(255,255,255,0.05)] group-hover:scale-95 transition-transform duration-200 mb-2.5">
                         <div class="w-full h-full bg-[#111111] relative z-0 overflow-hidden">
                             ${doc.content}
@@ -284,10 +283,10 @@
         // 2. 캔버스 및 확대/축소 레이어 엔진
         // ==========================================
         const bgCanvas = document.getElementById('bg-board');
-        const bgCtx = bgCanvas.getContext('2d'); // 하드웨어 가속을 위해 willReadFrequently 제거
+        const bgCtx = bgCanvas.getContext('2d'); 
         
         const canvas = document.getElementById('drawing-board');
-        const ctx = canvas.getContext('2d'); // 하드웨어 가속을 위해 willReadFrequently 제거
+        const ctx = canvas.getContext('2d'); 
         const zoomWrapper = document.getElementById('zoom-wrapper');
         
         let isDrawing = false;
@@ -299,7 +298,6 @@
         let lastX = 0, lastY = 0;
         let allowFingerDrawing = false; 
 
-        // 줌/팬 상태 변수
         let transform = { x: 0, y: 0, scale: 1 };
         let activePointers = new Map();
         let initialDistance = null;
@@ -307,13 +305,12 @@
         let initialPinchCenter = { x: 0, y: 0 };
         let lastPanPoint = null;
 
-        // PDF 및 썸네일 고정 변수
         let pdfDoc = null;
         let pageNum = 1;
         let pageIsRendering = false;
         let pageNumPending = null;
         let pageDrawings = {}; 
-        let docThumbnail = null; // 첫 페이지 썸네일 고정용
+        let docThumbnail = null; 
         let docAspectRatio = 1;
 
         let history = [];
@@ -330,6 +327,17 @@
                 toast.classList.remove('opacity-100', 'translate-y-0'); 
                 toast.classList.add('opacity-0', '-translate-y-4'); 
             }, 2000);
+        }
+
+        function initCanvasData() {
+            const savedNote = localStorage.getItem('savedDeviceNote');
+            if (savedNote) {
+                history = [savedNote];
+                historyStep = 0;
+                restoreState();
+            } else {
+                saveState();
+            }
         }
 
         // ==========================================
@@ -386,10 +394,10 @@
                     const img = new Image();
                     img.onload = function() {
                         setTimeout(() => {
-                            fitCanvasToContent(img.width, img.height);
-                            bgCtx.drawImage(img, 0, 0, bgCanvas.width, bgCanvas.height);
-                            saveState();
-                            updateFirstPageThumbnail(); // 첫장 썸네일 고정
+                            const { finalWidth, finalHeight } = fitCanvasToContent(img.width, img.height);
+                            bgCtx.drawImage(img, 0, 0, finalWidth, finalHeight);
+                            forceSave();
+                            updateFirstPageThumbnail(); 
                             showToast('이미지를 성공적으로 불러왔습니다.');
                             document.getElementById('file-upload-home').value = '';
                         }, 100); 
@@ -448,14 +456,25 @@
             pageDrawings[pageNum] = { history: [...history], historyStep: historyStep, dataURL: canvas.toDataURL() };
         }
 
+        // 더블 스케일링 버그를 방지하기 위해 복구 전 컨텍스트를 리셋합니다.
         function restorePageDrawing(num) {
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // 스케일 리셋
             ctx.clearRect(0, 0, canvas.width, canvas.height); 
+            ctx.restore();
+            
             if (pageDrawings[num]) {
                 history = [...pageDrawings[num].history];
                 historyStep = pageDrawings[num].historyStep;
                 const img = new Image();
                 img.src = pageDrawings[num].dataURL;
-                img.onload = () => { ctx.drawImage(img, 0, 0); updateFirstPageThumbnail(); };
+                img.onload = () => { 
+                    ctx.save();
+                    ctx.setTransform(1, 0, 0, 1, 0, 0); // 스케일 리셋 후 드로우
+                    ctx.drawImage(img, 0, 0); 
+                    ctx.restore();
+                    if (num === 1) updateFirstPageThumbnail(); 
+                };
             } else {
                 history = []; historyStep = -1;
                 saveState(); 
@@ -470,7 +489,6 @@
             zoomWrapper.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`;
         }
 
-        // 화면 좌표를 캔버스 좌표로 변환
         function getEventCoords(e) {
             const wrapperRect = document.getElementById('canvas-wrapper').getBoundingClientRect();
             return {
@@ -506,7 +524,6 @@
             bgCtx.fillStyle = '#FFFFFF'; 
             bgCtx.fillRect(0, 0, finalWidth, finalHeight);
             
-            // 중앙 정렬 및 초기 줌 리셋
             transform = { x: (wrapper.clientWidth - finalWidth) / 2, y: (wrapper.clientHeight - finalHeight) / 2, scale: 1 };
             applyTransform();
 
@@ -551,7 +568,6 @@
             }
         }
 
-        // 문서 1페이지(혹은 현재 단일 문서) 썸네일 및 비율 저장
         function updateFirstPageThumbnail() {
             if (pageNum === 1 || !pdfDoc) {
                 const tempCanvas = document.createElement('canvas');
@@ -575,7 +591,6 @@
             }
         }
 
-        // 데스크탑 마우스 휠 확대/축소 지원
         document.getElementById('canvas-wrapper').addEventListener('wheel', (e) => {
             e.preventDefault();
             const wrapperRect = document.getElementById('canvas-wrapper').getBoundingClientRect();
@@ -690,7 +705,6 @@
             saveTimeout = setTimeout(() => { saveState(); saveTimeout = null; }, 300);
         }
 
-        // 포인터 멀티터치 및 그리기 통합 핸들러
         function handlePointerDown(e) {
             if (e.target !== canvas && e.target !== bgCanvas && e.target.id !== 'zoom-wrapper') return;
             activePointers.set(e.pointerId, e);
@@ -704,12 +718,10 @@
                 initialPinchCenter = { x: (pts[0].clientX + pts[1].clientX) / 2, y: (pts[0].clientY + pts[1].clientY) / 2 };
             } 
             else if (activePointers.size === 1) {
-                // 터치인데 펜슬모드면 캔버스 이동(Pan)만 허용
                 if (e.pointerType === 'touch' && !allowFingerDrawing) {
                     isPanning = true;
                     lastPanPoint = { x: e.clientX, y: e.clientY };
                 } else {
-                    // 애플펜슬/마우스 혹은 터치허용 시 필기 시작
                     isDrawing = true;
                     if (saveTimeout) { clearTimeout(saveTimeout); saveTimeout = null; }
                     
@@ -725,8 +737,7 @@
                         ctx.arc(lastX, lastY, currentLineWidth / 2, 0, Math.PI * 2);
                         ctx.fillStyle = currentColor; 
                         ctx.fill();
-                        ctx.beginPath();
-                        ctx.moveTo(lastX, lastY);
+                        ctx.closePath();
                     }
                 }
             }
@@ -766,8 +777,14 @@
                     const coords = getEventCoords(e);
                     ctx.lineWidth = currentLineWidth;
                     ctx.strokeStyle = currentColor;
+                    
+                    // 핵심 최적화: 전체를 다시 그리지 않고 부분 조각만 이어 그림
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
                     ctx.lineTo(coords.x, coords.y);
                     ctx.stroke();
+                    ctx.closePath();
+                    
                     lastX = coords.x; lastY = coords.y;
                 }
             }
@@ -781,8 +798,6 @@
             if (activePointers.size === 0) {
                 if (isDrawing) {
                     isDrawing = false;
-                    ctx.closePath();
-                    // 백그라운드 저장 (Lag 방지)
                     saveTimeout = setTimeout(() => { saveState(); saveTimeout = null; }, 300);
                 }
                 isPanning = false;
@@ -807,7 +822,7 @@
             history.push(dataUrl);
             if (history.length > maxHistory) { history.shift(); historyStep--; }
             updateUndoRedoButtons();
-            updateFirstPageThumbnail(); // 변경 시 마다 첫장 썸네일 동기화 업데이트
+            updateFirstPageThumbnail(); 
             try { localStorage.setItem('savedDeviceNote', dataUrl); } catch (err) {}
         }
 
@@ -818,9 +833,11 @@
             const img = new Image();
             img.src = history[historyStep];
             img.onload = function () {
-                ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0); // 이중 스케일링 방지용 리셋
                 ctx.clearRect(0, 0, canvas.width, canvas.height); 
-                ctx.drawImage(img, 0, 0); ctx.restore();
+                ctx.drawImage(img, 0, 0);
+                ctx.restore();
                 updateFirstPageThumbnail();
             };
             updateUndoRedoButtons();
@@ -855,10 +872,9 @@
             showToast('캔버스가 초기화되었습니다.');
         }
 
-        // 문서 저장 (홈 화면 생성)
         function saveNoteToHome() {
             forceSave();
-            updateFirstPageThumbnail(); // 확실하게 첫번째 페이지 기반 최신 썸네일 보장
+            updateFirstPageThumbnail(); 
             
             const now = new Date();
             const dateStr = `${now.getFullYear()}. ${now.getMonth()+1}. ${now.getDate()}. ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -868,7 +884,7 @@
                 date: dateStr,
                 star: false,
                 starColor: "",
-                aspectRatio: docAspectRatio, // 세로/가로 형태 저장
+                aspectRatio: docAspectRatio, 
                 content: `<img src="${docThumbnail}" class="w-full h-full object-cover">`
             });
 
@@ -886,8 +902,21 @@
             }, 50);
         }
 
+        // 기존 썸네일 클릭 시 호출되어, 이전 문서 상태를 백지화 없이 불러옵니다
+        function resumeRecentDocument() {
+            document.getElementById('document-list-screen').classList.add('hidden');
+            document.getElementById('canvas-screen').classList.remove('hidden');
+            document.getElementById('canvas-screen').classList.add('flex');
+            setTimeout(() => {
+                if (!pdfDoc) {
+                    resizeCanvas(true);
+                    if(historyStep === -1) initCanvasData();
+                }
+            }, 50);
+        }
+
         function closeCanvas() {
-            forceSave(); saveState(); 
+            forceSave(); saveCurrentPageDrawing(); saveState(); 
             document.getElementById('canvas-screen').classList.add('hidden');
             document.getElementById('canvas-screen').classList.remove('flex');
             document.getElementById('document-list-screen').classList.remove('hidden');
