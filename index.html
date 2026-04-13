@@ -31,15 +31,6 @@
         /* 필기 시 화면 밀림 방지 */
         #canvas-screen, #canvas-wrapper { touch-action: none; overscroll-behavior: none; }
 
-        /* 드로잉 보드는 투명하게 유지하여 배경 캔버스가 보이도록 설정 */
-        #drawing-board {
-            width: 100%;
-            height: 100%;
-            display: block;
-            touch-action: none; 
-            -webkit-touch-callout: none;
-        }
-
         /* 새로워진 알약 툴바 디자인 (크기 축소 및 동기화) */
         .tool-btn {
             width: 28px;
@@ -55,7 +46,7 @@
         .tool-btn.active {
             background-color: #3b82f6; 
             color: white;
-            box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); /* 은은한 블루 글로우 */
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
         }
         .tool-btn:active { transform: scale(0.92); }
 
@@ -142,11 +133,8 @@
                 <button onclick="document.getElementById('file-upload-home').click()" class="w-9 h-9 rounded-full flex items-center justify-center text-[#3b82f6] hover:bg-white/10 active:scale-95 transition-colors" title="문서 불러오기">
                     <i class="fa-regular fa-file-pdf text-[15px]"></i>
                 </button>
-                <button onclick="saveNote()" class="w-9 h-9 rounded-full flex items-center justify-center text-[#3b82f6] hover:bg-white/10 active:scale-95 transition-colors" title="문서 저장">
+                <button onclick="saveNoteToHome()" class="w-9 h-9 rounded-full flex items-center justify-center text-[#3b82f6] hover:bg-white/10 active:scale-95 transition-colors" title="홈 화면에 저장">
                     <i class="fa-solid fa-download text-[15px]"></i>
-                </button>
-                <button class="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                    <i class="fa-solid fa-ellipsis text-[15px]"></i>
                 </button>
             </div>
         </div>
@@ -192,7 +180,7 @@
                 <div class="color-btn" style="background-color: #3b82f6;" onclick="setColor('#3b82f6', this)"></div>
                 <div class="color-btn" style="background-color: #FF3B30;" onclick="setColor('#FF3B30', this)"></div>
                 <div class="color-btn" style="background-color: #FFFFFF;" onclick="setColor('#FFFFFF', this)"></div>
-                <div class="color-btn relative overflow-hidden flex items-center justify-center" style="background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);" title="사용자 지정 색상">
+                <div class="color-btn relative overflow-hidden flex items-center justify-center border border-white/20" style="background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);" title="사용자 지정 색상">
                     <input type="color" id="custom-color-picker" class="absolute inset-0 w-[200%] h-[200%] -top-1/2 -left-1/2 opacity-0 cursor-pointer" onchange="setCustomColor(this.value, this.parentElement)">
                 </div>
             </div>
@@ -214,10 +202,12 @@
             <button onclick="nextPage()" class="text-gray-400 hover:text-[#3b82f6] active:scale-95 transition-colors"><i class="fa-solid fa-chevron-right text-lg"></i></button>
         </div>
 
-        <!-- 캔버스 컨테이너 (레이어 분리 적용) -->
-        <div id="canvas-wrapper" class="flex-1 relative w-full h-full bg-[#111111] overflow-hidden flex items-center justify-center">
-            <canvas id="bg-board" class="absolute z-0 pointer-events-none shadow-2xl"></canvas>
-            <canvas id="drawing-board" class="absolute z-10 touch-none"></canvas>
+        <!-- 캔버스 래퍼 (확대/축소를 위한 Transform 적용 영역) -->
+        <div id="canvas-wrapper" class="flex-1 relative w-full h-full bg-[#111111] overflow-hidden">
+            <div id="zoom-wrapper" class="absolute top-0 left-0 w-full h-full" style="transform-origin: 0 0; transform: translate(0px, 0px) scale(1);">
+                <canvas id="bg-board" class="absolute top-0 left-0 z-0 pointer-events-none shadow-2xl"></canvas>
+                <canvas id="drawing-board" class="absolute top-0 left-0 z-10 touch-none"></canvas>
+            </div>
         </div>
 
         <!-- 전체 지우기 모달 -->
@@ -242,6 +232,9 @@
     </div>
 
     <script>
+        // ==========================================
+        // 1. 문서 목록 홈 화면 로직
+        // ==========================================
         const mockDocuments = [];
 
         function renderDocuments() {
@@ -249,9 +242,13 @@
             if (!grid) return; 
             let html = '';
             mockDocuments.forEach(doc => { 
+                // 비율에 따른 동적 크기 조절 (가로형 / 세로형 유지)
+                const isLandscape = doc.aspectRatio > 1.2;
+                const aspectClass = isLandscape ? 'aspect-[4/3]' : 'aspect-[3/4]';
+                
                 html += `
                 <div class="flex flex-col cursor-pointer group" onclick="openCanvas(true)">
-                    <div class="doc-thumb aspect-[4/3] sm:aspect-[3/4] shadow-[0_2px_10px_rgba(255,255,255,0.05)] group-hover:scale-95 transition-transform duration-200 mb-2.5">
+                    <div class="doc-thumb ${aspectClass} shadow-[0_2px_10px_rgba(255,255,255,0.05)] group-hover:scale-95 transition-transform duration-200 mb-2.5">
                         <div class="w-full h-full bg-[#111111] relative z-0 overflow-hidden">
                             ${doc.content}
                         </div>
@@ -283,31 +280,45 @@
             }
         });
 
+        // ==========================================
+        // 2. 캔버스 및 확대/축소 레이어 엔진
+        // ==========================================
         const bgCanvas = document.getElementById('bg-board');
-        const bgCtx = bgCanvas.getContext('2d', { willReadFrequently: true });
+        const bgCtx = bgCanvas.getContext('2d'); // 하드웨어 가속을 위해 willReadFrequently 제거
         
         const canvas = document.getElementById('drawing-board');
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const ctx = canvas.getContext('2d'); // 하드웨어 가속을 위해 willReadFrequently 제거
+        const zoomWrapper = document.getElementById('zoom-wrapper');
         
         let isDrawing = false;
+        let isPanning = false;
         let currentTool = 'pen';
         let eraserMode = 'free'; 
-        let currentColor = '#000000'; // 기본 펜 색상을 검은색으로 변경
+        let currentColor = '#000000';
         let currentLineWidth = 4;
         let lastX = 0, lastY = 0;
         let allowFingerDrawing = false; 
 
+        // 줌/팬 상태 변수
+        let transform = { x: 0, y: 0, scale: 1 };
+        let activePointers = new Map();
+        let initialDistance = null;
+        let initialTransform = null;
+        let initialPinchCenter = { x: 0, y: 0 };
+        let lastPanPoint = null;
+
+        // PDF 및 썸네일 고정 변수
         let pdfDoc = null;
         let pageNum = 1;
         let pageIsRendering = false;
         let pageNumPending = null;
         let pageDrawings = {}; 
+        let docThumbnail = null; // 첫 페이지 썸네일 고정용
+        let docAspectRatio = 1;
 
         let history = [];
         let historyStep = -1;
         const maxHistory = 30;
-        
-        // 애플 펜슬 최적화를 위한 저장 대기 타이머
         let saveTimeout = null;
 
         function showToast(msg) {
@@ -321,25 +332,9 @@
             }, 2000);
         }
 
-        function forceSave() {
-            if (saveTimeout) {
-                clearTimeout(saveTimeout);
-                saveTimeout = null;
-                saveState();
-            }
-        }
-
-        function initCanvasData() {
-            const savedNote = localStorage.getItem('savedDeviceNote');
-            if (savedNote) {
-                history = [savedNote];
-                historyStep = 0;
-                restoreState();
-            } else {
-                saveState();
-            }
-        }
-
+        // ==========================================
+        // 3. 파일 불러오기 및 페이지네이션
+        // ==========================================
         function startBlankMemo() {
             document.getElementById('new-menu').classList.add('hidden');
             pdfDoc = null;
@@ -354,7 +349,6 @@
             if (!file) return;
 
             document.getElementById('canvas-title').innerText = file.name;
-
             const fileExt = file.name.split('.').pop().toLowerCase();
 
             if (file.type === 'application/pdf' || fileExt === 'pdf') {
@@ -375,7 +369,6 @@
                         renderPage(pageNum);
                     }).catch(err => {
                         showToast('PDF를 읽는 데 실패했습니다.');
-                        console.error(err);
                     });
                 };
                 reader.readAsArrayBuffer(file);
@@ -393,9 +386,10 @@
                     const img = new Image();
                     img.onload = function() {
                         setTimeout(() => {
-                            const { finalWidth, finalHeight } = fitCanvasToContent(img.width, img.height);
-                            bgCtx.drawImage(img, 0, 0, finalWidth, finalHeight);
-                            forceSave();
+                            fitCanvasToContent(img.width, img.height);
+                            bgCtx.drawImage(img, 0, 0, bgCanvas.width, bgCanvas.height);
+                            saveState();
+                            updateFirstPageThumbnail(); // 첫장 썸네일 고정
                             showToast('이미지를 성공적으로 불러왔습니다.');
                             document.getElementById('file-upload-home').value = '';
                         }, 100); 
@@ -411,16 +405,13 @@
         function renderPage(num) {
             pageIsRendering = true;
             pdfDoc.getPage(num).then(function(page) {
-                // 고해상도 렌더링을 위한 임시 캔버스
                 const viewport = page.getViewport({ scale: 2.0 }); 
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = viewport.width;
                 tempCanvas.height = viewport.height;
                 const tempCtx = tempCanvas.getContext('2d');
                 
-                const renderContext = { canvasContext: tempCtx, viewport: viewport };
-                
-                page.render(renderContext).promise.then(() => {
+                page.render({ canvasContext: tempCtx, viewport: viewport }).promise.then(() => {
                     pageIsRendering = false;
                     
                     const { finalWidth, finalHeight } = fitCanvasToContent(viewport.width, viewport.height);
@@ -438,32 +429,23 @@
         }
 
         function queueRenderPage(num) {
-            if (pageIsRendering) { pageNumPending = num; } 
-            else { renderPage(num); }
+            if (pageIsRendering) { pageNumPending = num; } else { renderPage(num); }
         }
 
         function prevPage() {
             if (!pdfDoc || pageNum <= 1) return;
-            forceSave();
-            saveCurrentPageDrawing(); 
-            pageNum--;
-            queueRenderPage(pageNum);
+            forceSave(); saveCurrentPageDrawing(); 
+            pageNum--; queueRenderPage(pageNum);
         }
 
         function nextPage() {
             if (!pdfDoc || pageNum >= pdfDoc.numPages) return;
-            forceSave();
-            saveCurrentPageDrawing(); 
-            pageNum++;
-            queueRenderPage(pageNum);
+            forceSave(); saveCurrentPageDrawing(); 
+            pageNum++; queueRenderPage(pageNum);
         }
 
         function saveCurrentPageDrawing() {
-            pageDrawings[pageNum] = {
-                history: [...history],
-                historyStep: historyStep,
-                dataURL: canvas.toDataURL() 
-            };
+            pageDrawings[pageNum] = { history: [...history], historyStep: historyStep, dataURL: canvas.toDataURL() };
         }
 
         function restorePageDrawing(num) {
@@ -473,7 +455,7 @@
                 historyStep = pageDrawings[num].historyStep;
                 const img = new Image();
                 img.src = pageDrawings[num].dataURL;
-                img.onload = () => { ctx.drawImage(img, 0, 0); };
+                img.onload = () => { ctx.drawImage(img, 0, 0); updateFirstPageThumbnail(); };
             } else {
                 history = []; historyStep = -1;
                 saveState(); 
@@ -481,32 +463,53 @@
             updateUndoRedoButtons();
         }
 
-        // 문서 화면 비율에 맞게 리사이징 및 위치 조정 함수
+        // ==========================================
+        // 4. 캔버스 사이즈, 확대/축소 및 썸네일 고정
+        // ==========================================
+        function applyTransform() {
+            zoomWrapper.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`;
+        }
+
+        // 화면 좌표를 캔버스 좌표로 변환
+        function getEventCoords(e) {
+            const wrapperRect = document.getElementById('canvas-wrapper').getBoundingClientRect();
+            return {
+                x: (e.clientX - wrapperRect.left - transform.x) / transform.scale,
+                y: (e.clientY - wrapperRect.top - transform.y) / transform.scale
+            };
+        }
+
         function fitCanvasToContent(contentWidth, contentHeight) {
             const wrapper = document.getElementById('canvas-wrapper');
-            const scale = Math.min((wrapper.clientWidth - 40) / contentWidth, (wrapper.clientHeight - 40) / contentHeight);
+            const padding = 40;
+            const scale = Math.min((wrapper.clientWidth - padding) / contentWidth, (wrapper.clientHeight - padding) / contentHeight);
             
             const finalWidth = contentWidth * scale;
             const finalHeight = contentHeight * scale;
 
+            zoomWrapper.style.width = finalWidth + 'px';
+            zoomWrapper.style.height = finalHeight + 'px';
+
             const dpr = window.devicePixelRatio || 1;
-            
             [bgCanvas, canvas].forEach(c => {
                 c.width = finalWidth * dpr;
                 c.height = finalHeight * dpr;
                 c.style.width = finalWidth + 'px';
                 c.style.height = finalHeight + 'px';
-                const context = c.getContext('2d', { willReadFrequently: true });
-                context.setTransform(1, 0, 0, 1, 0, 0); // Transform 리셋 보장
+                const context = c.getContext('2d');
+                context.setTransform(1, 0, 0, 1, 0, 0); 
                 context.scale(dpr, dpr);
                 context.lineCap = 'round';
                 context.lineJoin = 'round';
             });
             
-            // 캔버스 배경(종이색상)을 완전한 흰색으로 적용
             bgCtx.fillStyle = '#FFFFFF'; 
             bgCtx.fillRect(0, 0, finalWidth, finalHeight);
             
+            // 중앙 정렬 및 초기 줌 리셋
+            transform = { x: (wrapper.clientWidth - finalWidth) / 2, y: (wrapper.clientHeight - finalHeight) / 2, scale: 1 };
+            applyTransform();
+
             return { finalWidth, finalHeight };
         }
 
@@ -515,38 +518,86 @@
             
             if (isBlank || !pdfDoc) {
                 const wrapper = document.getElementById('canvas-wrapper');
-                const dpr = window.devicePixelRatio || 1;
+                const finalWidth = wrapper.clientWidth;
+                const finalHeight = wrapper.clientHeight;
                 
+                zoomWrapper.style.width = finalWidth + 'px';
+                zoomWrapper.style.height = finalHeight + 'px';
+
+                const dpr = window.devicePixelRatio || 1;
                 [bgCanvas, canvas].forEach(c => {
                     const temp = c === canvas && historyStep >= 0 ? ctx.getImageData(0, 0, canvas.width, canvas.height) : null;
                     
-                    c.width = wrapper.clientWidth * dpr;
-                    c.height = wrapper.clientHeight * dpr;
-                    c.style.width = wrapper.clientWidth + 'px';
-                    c.style.height = wrapper.clientHeight + 'px';
-                    const context = c.getContext('2d', { willReadFrequently: true });
+                    c.width = finalWidth * dpr;
+                    c.height = finalHeight * dpr;
+                    c.style.width = finalWidth + 'px';
+                    c.style.height = finalHeight + 'px';
+                    const context = c.getContext('2d');
                     context.setTransform(1, 0, 0, 1, 0, 0);
                     context.scale(dpr, dpr);
                     context.lineCap = 'round';
                     context.lineJoin = 'round';
 
                     if (c === bgCanvas) {
-                        // 빈 메모의 배경(종이색상)도 흰색으로 고정
                         context.fillStyle = '#FFFFFF';
-                        context.fillRect(0, 0, wrapper.clientWidth, wrapper.clientHeight);
+                        context.fillRect(0, 0, finalWidth, finalHeight);
                     } else if (temp) {
                         context.putImageData(temp, 0, 0);
                     }
                 });
+
+                transform = { x: 0, y: 0, scale: 1 };
+                applyTransform();
             }
         }
 
-        function handleEraserClick() {
-            if (currentTool === 'eraser') {
-                document.getElementById('eraser-menu').classList.toggle('hidden');
-            } else {
-                setTool('eraser');
+        // 문서 1페이지(혹은 현재 단일 문서) 썸네일 및 비율 저장
+        function updateFirstPageThumbnail() {
+            if (pageNum === 1 || !pdfDoc) {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(bgCanvas, 0, 0);
+                tempCtx.drawImage(canvas, 0, 0);
+                
+                const thumbCanvas = document.createElement('canvas');
+                const maxSize = 300;
+                let w = canvas.width, h = canvas.height;
+                if (w > h) { h = h * (maxSize/w); w = maxSize; }
+                else { w = w * (maxSize/h); h = maxSize; }
+                
+                thumbCanvas.width = w; thumbCanvas.height = h;
+                thumbCanvas.getContext('2d').drawImage(tempCanvas, 0, 0, w, h);
+                
+                docThumbnail = thumbCanvas.toDataURL('image/jpeg', 0.8);
+                docAspectRatio = canvas.width / canvas.height;
             }
+        }
+
+        // 데스크탑 마우스 휠 확대/축소 지원
+        document.getElementById('canvas-wrapper').addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const wrapperRect = document.getElementById('canvas-wrapper').getBoundingClientRect();
+            const mouseX = e.clientX - wrapperRect.left;
+            const mouseY = e.clientY - wrapperRect.top;
+
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            let newScale = transform.scale * zoomFactor;
+            newScale = Math.max(0.5, Math.min(newScale, 5));
+
+            transform.x = mouseX - (mouseX - transform.x) * (newScale / transform.scale);
+            transform.y = mouseY - (mouseY - transform.y) * (newScale / transform.scale);
+            transform.scale = newScale;
+            applyTransform();
+        }, { passive: false });
+
+        // ==========================================
+        // 5. 그리기, 확대/축소(터치) & 애플펜슬 최적화
+        // ==========================================
+        function handleEraserClick() {
+            if (currentTool === 'eraser') document.getElementById('eraser-menu').classList.toggle('hidden');
+            else setTool('eraser');
         }
 
         function setEraserMode(mode) {
@@ -556,15 +607,12 @@
             document.getElementById('btn-eraser-free').classList.add('text-white');
             document.getElementById('btn-eraser-stroke').classList.remove('text-[#3b82f6]');
             document.getElementById('btn-eraser-stroke').classList.add('text-white');
-            
             document.getElementById(`btn-eraser-${mode}`).classList.remove('text-white');
             document.getElementById(`btn-eraser-${mode}`).classList.add('text-[#3b82f6]');
-            showToast(mode === 'free' ? '자유 지우개가 선택되었습니다.' : '스마트 획 지우개가 선택되었습니다.');
         }
 
         function setTool(tool) {
-            forceSave();
-            currentTool = tool;
+            forceSave(); currentTool = tool;
             document.getElementById('tool-pen').classList.remove('active');
             document.getElementById('tool-eraser').classList.remove('active');
             document.getElementById(`tool-${tool}`).classList.add('active');
@@ -573,27 +621,19 @@
                 ctx.globalCompositeOperation = 'source-over';
             } else if (tool === 'eraser' && eraserMode === 'free') {
                 ctx.globalCompositeOperation = 'destination-out';
-                currentLineWidth = 20; 
-                document.getElementById('line-width').value = 20;
+                currentLineWidth = 20; document.getElementById('line-width').value = 20;
             }
         }
 
         function setColor(color, element) {
-            forceSave();
-            currentTool = 'pen';
-            currentColor = color;
+            forceSave(); currentTool = 'pen'; currentColor = color;
             ctx.globalCompositeOperation = 'source-over';
-            
             document.getElementById('tool-eraser').classList.remove('active');
             document.getElementById('tool-pen').classList.add('active');
             document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
         }
-
-        function setCustomColor(color, element) {
-            setColor(color, element);
-        }
-
+        function setCustomColor(color, element) { setColor(color, element); }
         function setLineWidth(width) { currentLineWidth = width; }
 
         function toggleFingerDrawing() {
@@ -605,12 +645,12 @@
                 btn.classList.add('text-[#3b82f6]', 'bg-white/10');
                 btn.classList.remove('text-gray-400', 'bg-[#151515]');
                 icon.className = 'fa-solid fa-hand-pointer text-[13px]';
-                showToast('터치 필기가 허용되었습니다.');
+                showToast('터치 및 펜슬 필기가 모두 허용됩니다.');
             } else {
                 btn.classList.remove('text-[#3b82f6]', 'bg-white/10');
                 btn.classList.add('text-gray-400', 'bg-[#151515]');
                 icon.className = 'fa-solid fa-pen-nib text-[13px]';
-                showToast('펜슬/마우스 전용 모드 (팜 리젝션 활성화)');
+                showToast('펜슬 전용 모드 (손가락으론 이동/확대만 가능)');
             }
         }
 
@@ -618,22 +658,16 @@
             const dpr = window.devicePixelRatio || 1;
             const x = Math.floor(startX * dpr);
             const y = Math.floor(startY * dpr);
-            
             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imgData.data;
-            const w = canvas.width;
-            const h = canvas.height;
+            const data = imgData.data; const w = canvas.width; const h = canvas.height;
             
-            let targetX = x, targetY = y;
-            let found = false;
+            let targetX = x, targetY = y, found = false;
             const radius = Math.floor(10 * dpr);
             for(let dy = -radius; dy <= radius; dy++){
                 for(let dx = -radius; dx <= radius; dx++){
                     let ny = y + dy, nx = x + dx;
-                    if(ny >= 0 && ny < h && nx >= 0 && nx < w) {
-                        if(data[(ny * w + nx) * 4 + 3] > 0) {
-                            targetX = nx; targetY = ny; found = true; break;
-                        }
+                    if(ny >= 0 && ny < h && nx >= 0 && nx < w && data[(ny * w + nx) * 4 + 3] > 0) {
+                        targetX = nx; targetY = ny; found = true; break;
                     }
                 }
                 if(found) break;
@@ -642,98 +676,129 @@
 
             const pixelStack = [targetY * w + targetX];
             while(pixelStack.length > 0) {
-                let pos = pixelStack.pop();
-                let idx = pos * 4;
-                
+                let pos = pixelStack.pop(); let idx = pos * 4;
                 if (data[idx + 3] === 0) continue;
-                
-                data[idx + 3] = 0;
-                data[idx] = 0; data[idx+1] = 0; data[idx+2] = 0;
-                
-                let px = pos % w;
-                let py = Math.floor(pos / w);
-                
+                data[idx + 3] = 0; data[idx] = 0; data[idx+1] = 0; data[idx+2] = 0;
+                let px = pos % w; let py = Math.floor(pos / w);
                 if (px > 0) pixelStack.push(pos - 1);
                 if (px < w - 1) pixelStack.push(pos + 1);
                 if (py > 0) pixelStack.push(pos - w);
                 if (py < h - 1) pixelStack.push(pos + w);
             }
             ctx.putImageData(imgData, 0, 0);
-            
             if (saveTimeout) clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                saveState();
-                saveTimeout = null;
-            }, 300);
+            saveTimeout = setTimeout(() => { saveState(); saveTimeout = null; }, 300);
         }
 
-        // 애플펜슬 Lag 해소를 위한 이벤트 리스너 최적화
-        function startDrawing(e) {
-            if (e.pointerType === 'touch' && !allowFingerDrawing) return;
-            e.preventDefault(); 
-            
-            // 기존에 대기중이던 저장이 있다면 취소(필기를 연달아 할 때 병목현상 방지)
-            if (saveTimeout) {
-                clearTimeout(saveTimeout);
-                saveTimeout = null;
-            }
-            
-            const rect = canvas.getBoundingClientRect();
-            lastX = e.clientX - rect.left; lastY = e.clientY - rect.top;
+        // 포인터 멀티터치 및 그리기 통합 핸들러
+        function handlePointerDown(e) {
+            if (e.target !== canvas && e.target !== bgCanvas && e.target.id !== 'zoom-wrapper') return;
+            activePointers.set(e.pointerId, e);
+            e.preventDefault();
 
-            if (currentTool === 'eraser' && eraserMode === 'stroke') {
-                eraseStroke(lastX, lastY);
-                isDrawing = false;
-            } else {
-                isDrawing = true;
-                ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
-                
-                ctx.beginPath();
-                ctx.arc(lastX, lastY, currentLineWidth / 2, 0, Math.PI * 2);
-                ctx.fillStyle = currentColor; 
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
-            }
-        }
+            if (activePointers.size === 2) {
+                isDrawing = false; isPanning = false;
+                const pts = Array.from(activePointers.values());
+                initialDistance = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
+                initialTransform = { ...transform };
+                initialPinchCenter = { x: (pts[0].clientX + pts[1].clientX) / 2, y: (pts[0].clientY + pts[1].clientY) / 2 };
+            } 
+            else if (activePointers.size === 1) {
+                // 터치인데 펜슬모드면 캔버스 이동(Pan)만 허용
+                if (e.pointerType === 'touch' && !allowFingerDrawing) {
+                    isPanning = true;
+                    lastPanPoint = { x: e.clientX, y: e.clientY };
+                } else {
+                    // 애플펜슬/마우스 혹은 터치허용 시 필기 시작
+                    isDrawing = true;
+                    if (saveTimeout) { clearTimeout(saveTimeout); saveTimeout = null; }
+                    
+                    const coords = getEventCoords(e);
+                    lastX = coords.x; lastY = coords.y;
 
-        function draw(e) {
-            if (!isDrawing) return;
-            if (e.pointerType === 'touch' && !allowFingerDrawing) return;
-            e.preventDefault(); 
-            
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left; const y = e.clientY - rect.top;
-
-            ctx.lineWidth = currentLineWidth;
-            ctx.strokeStyle = currentColor;
-            
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            lastX = x; lastY = y;
-        }
-
-        function stopDrawing(e) {
-            if (isDrawing) {
-                e.preventDefault();
-                isDrawing = false;
-                ctx.closePath();
-                
-                // 필기를 멈추고 300ms 동안 새 필기가 없으면 백그라운드 저장 (Lag 완벽 해결)
-                saveTimeout = setTimeout(() => {
-                    saveState();
-                    saveTimeout = null;
-                }, 300);
+                    if (currentTool === 'eraser' && eraserMode === 'stroke') {
+                        eraseStroke(lastX, lastY);
+                        isDrawing = false;
+                    } else {
+                        ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
+                        ctx.beginPath();
+                        ctx.arc(lastX, lastY, currentLineWidth / 2, 0, Math.PI * 2);
+                        ctx.fillStyle = currentColor; 
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.moveTo(lastX, lastY);
+                    }
+                }
             }
         }
 
-        // passive: false 옵션을 통해 iOS Safari 제스처 밀림을 완벽 차단
-        canvas.addEventListener('pointerdown', startDrawing, { passive: false });
-        canvas.addEventListener('pointermove', draw, { passive: false });
-        canvas.addEventListener('pointerup', stopDrawing, { passive: false });
-        canvas.addEventListener('pointercancel', stopDrawing, { passive: false });
-        canvas.addEventListener('pointerout', stopDrawing, { passive: false });
+        function handlePointerMove(e) {
+            if (!activePointers.has(e.pointerId)) return;
+            activePointers.set(e.pointerId, e);
+            e.preventDefault();
+
+            if (activePointers.size === 2) {
+                const pts = Array.from(activePointers.values());
+                const currentDistance = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
+                const currentCenter = { x: (pts[0].clientX + pts[1].clientX) / 2, y: (pts[0].clientY + pts[1].clientY) / 2 };
+
+                const scaleFactor = currentDistance / initialDistance;
+                let newScale = initialTransform.scale * scaleFactor;
+                newScale = Math.max(0.5, Math.min(newScale, 5)); 
+
+                const wrapperRect = document.getElementById('canvas-wrapper').getBoundingClientRect();
+                const centerX = initialPinchCenter.x - wrapperRect.left;
+                const centerY = initialPinchCenter.y - wrapperRect.top;
+
+                transform.scale = newScale;
+                transform.x = centerX - (centerX - initialTransform.x) * (newScale / initialTransform.scale) + (currentCenter.x - initialPinchCenter.x);
+                transform.y = centerY - (centerY - initialTransform.y) * (newScale / initialTransform.scale) + (currentCenter.y - initialPinchCenter.y);
+                applyTransform();
+            } 
+            else if (activePointers.size === 1) {
+                if (isPanning) {
+                    const dx = e.clientX - lastPanPoint.x;
+                    const dy = e.clientY - lastPanPoint.y;
+                    transform.x += dx; transform.y += dy;
+                    applyTransform();
+                    lastPanPoint = { x: e.clientX, y: e.clientY };
+                } else if (isDrawing) {
+                    const coords = getEventCoords(e);
+                    ctx.lineWidth = currentLineWidth;
+                    ctx.strokeStyle = currentColor;
+                    ctx.lineTo(coords.x, coords.y);
+                    ctx.stroke();
+                    lastX = coords.x; lastY = coords.y;
+                }
+            }
+        }
+
+        function handlePointerUp(e) {
+            if (!activePointers.has(e.pointerId)) return;
+            activePointers.delete(e.pointerId);
+
+            if (activePointers.size < 2) { initialDistance = null; initialTransform = null; }
+            if (activePointers.size === 0) {
+                if (isDrawing) {
+                    isDrawing = false;
+                    ctx.closePath();
+                    // 백그라운드 저장 (Lag 방지)
+                    saveTimeout = setTimeout(() => { saveState(); saveTimeout = null; }, 300);
+                }
+                isPanning = false;
+            }
+        }
+
+        const wrapper = document.getElementById('canvas-wrapper');
+        wrapper.addEventListener('pointerdown', handlePointerDown, { passive: false });
+        wrapper.addEventListener('pointermove', handlePointerMove, { passive: false });
+        wrapper.addEventListener('pointerup', handlePointerUp, { passive: false });
+        wrapper.addEventListener('pointercancel', handlePointerUp, { passive: false });
+        wrapper.addEventListener('pointerout', handlePointerUp, { passive: false });
+
+        function forceSave() {
+            if (saveTimeout) { clearTimeout(saveTimeout); saveTimeout = null; saveState(); }
+        }
 
         function saveState() {
             historyStep++;
@@ -742,34 +807,21 @@
             history.push(dataUrl);
             if (history.length > maxHistory) { history.shift(); historyStep--; }
             updateUndoRedoButtons();
-            
+            updateFirstPageThumbnail(); // 변경 시 마다 첫장 썸네일 동기화 업데이트
             try { localStorage.setItem('savedDeviceNote', dataUrl); } catch (err) {}
         }
 
-        function undo() { 
-            forceSave();
-            if (historyStep > 0) { 
-                historyStep--; 
-                restoreState(); 
-            } 
-        }
-        function redo() { 
-            forceSave();
-            if (historyStep < history.length - 1) { 
-                historyStep++; 
-                restoreState(); 
-            } 
-        }
+        function undo() { forceSave(); if (historyStep > 0) { historyStep--; restoreState(); } }
+        function redo() { forceSave(); if (historyStep < history.length - 1) { historyStep++; restoreState(); } }
 
         function restoreState() {
             const img = new Image();
             img.src = history[historyStep];
             img.onload = function () {
-                ctx.save();
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
                 ctx.clearRect(0, 0, canvas.width, canvas.height); 
-                ctx.drawImage(img, 0, 0);
-                ctx.restore();
+                ctx.drawImage(img, 0, 0); ctx.restore();
+                updateFirstPageThumbnail();
             };
             updateUndoRedoButtons();
         }
@@ -795,35 +847,19 @@
         }
 
         function clearCanvas() {
-            forceSave();
-            closeClearModal();
+            forceSave(); closeClearModal();
             ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.clearRect(0, 0, canvas.width, canvas.height); 
-            ctx.restore();
-            saveState();
+            ctx.restore(); saveState();
             localStorage.removeItem('savedDeviceNote');
             showToast('캔버스가 초기화되었습니다.');
         }
 
-        function saveNote() {
+        // 문서 저장 (홈 화면 생성)
+        function saveNoteToHome() {
             forceSave();
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            const tempCtx = tempCanvas.getContext('2d');
+            updateFirstPageThumbnail(); // 확실하게 첫번째 페이지 기반 최신 썸네일 보장
             
-            tempCtx.drawImage(bgCanvas, 0, 0);
-            tempCtx.drawImage(canvas, 0, 0);
-
-            const thumbCanvas = document.createElement('canvas');
-            const thumbScale = 300 / canvas.width;
-            thumbCanvas.width = 300;
-            thumbCanvas.height = canvas.height * thumbScale;
-            const thumbCtx = thumbCanvas.getContext('2d');
-            thumbCtx.drawImage(tempCanvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
-            
-            const thumbnailDataUrl = thumbCanvas.toDataURL('image/jpeg', 0.8);
-
             const now = new Date();
             const dateStr = `${now.getFullYear()}. ${now.getMonth()+1}. ${now.getDate()}. ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
@@ -832,7 +868,8 @@
                 date: dateStr,
                 star: false,
                 starColor: "",
-                content: `<img src="${thumbnailDataUrl}" class="w-full h-full object-cover">`
+                aspectRatio: docAspectRatio, // 세로/가로 형태 저장
+                content: `<img src="${docThumbnail}" class="w-full h-full object-cover">`
             });
 
             renderDocuments();
@@ -850,8 +887,7 @@
         }
 
         function closeCanvas() {
-            forceSave();
-            saveState(); 
+            forceSave(); saveState(); 
             document.getElementById('canvas-screen').classList.add('hidden');
             document.getElementById('canvas-screen').classList.remove('flex');
             document.getElementById('document-list-screen').classList.remove('hidden');
@@ -862,9 +898,7 @@
             if(!pdfDoc) resizeCanvas(true);
         });
         
-        window.onload = () => {
-            renderDocuments();
-        };
+        window.onload = () => { renderDocuments(); };
     </script>
 </body>
 </html>
