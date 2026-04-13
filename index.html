@@ -106,6 +106,12 @@
         </div>
         
         <div class="flex gap-2 pointer-events-auto">
+            <!-- 손가락 필기 토글 버튼 -->
+            <button onclick="toggleFingerDrawing()" class="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/5 px-4 h-12 rounded-full flex items-center justify-center gap-2 text-gray-400 hover:text-white hover:bg-white/10 transition-colors active:scale-95 shadow-lg" id="btn-finger-toggle">
+                <i class="fa-solid fa-hand-slash text-[16px]" id="finger-icon"></i>
+                <span class="text-[13px] font-bold hidden md:inline" id="finger-text">손필기 차단됨</span>
+            </button>
+
             <!-- 실행 취소 / 다시 실행 -->
             <div class="flex bg-[#1C1C1E]/80 backdrop-blur-md border border-white/5 rounded-full p-1 shadow-lg">
                 <button onclick="undo()" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors active:scale-95 disabled:opacity-30" id="btn-undo">
@@ -200,6 +206,7 @@
         let currentLineWidth = 4;
         let lastX = 0;
         let lastY = 0;
+        let allowFingerDrawing = false; // 손가락 필기 허용 여부 (기본: 차단)
 
         // Undo / Redo 기능용 배열
         let history = [];
@@ -242,7 +249,16 @@
 
             // 저장해둔 그림 복구 (리사이징 시)
             if(historyStep === -1) {
-                saveState(); // 최초 빈 화면 저장
+                // 기기에 자동 저장된 이전 필기 데이터 불러오기
+                const savedNote = localStorage.getItem('savedDeviceNote');
+                if (savedNote) {
+                    history = [savedNote];
+                    historyStep = 0;
+                    restoreState();
+                    setTimeout(() => showToast('이전 필기를 자동으로 불러왔습니다.'), 400);
+                } else {
+                    saveState(); // 최초 빈 화면 저장
+                }
             } else {
                 ctx.putImageData(tempState, 0, 0);
             }
@@ -273,8 +289,33 @@
             currentLineWidth = width;
         }
 
+        // 손가락 필기 토글 함수
+        function toggleFingerDrawing() {
+            allowFingerDrawing = !allowFingerDrawing;
+            const btn = document.getElementById('btn-finger-toggle');
+            const icon = document.getElementById('finger-icon');
+            const text = document.getElementById('finger-text');
+            
+            if (allowFingerDrawing) {
+                btn.classList.add('text-[#3b82f6]');
+                btn.classList.remove('text-gray-400');
+                icon.className = 'fa-solid fa-hand text-[16px]';
+                text.innerText = '손필기 허용됨';
+                showToast('손가락 필기가 허용되었습니다.');
+            } else {
+                btn.classList.remove('text-[#3b82f6]');
+                btn.classList.add('text-gray-400');
+                icon.className = 'fa-solid fa-hand-slash text-[16px]';
+                text.innerText = '손필기 차단됨';
+                showToast('손가락 필기가 차단되었습니다. (펜/마우스 전용)');
+            }
+        }
+
         // 포인터 이벤트 핸들러 (마우스, 터치, 펜슬 모두 지원)
         function startDrawing(e) {
+            // 터치(손가락) 입력인데 허용되지 않은 경우 무시 (애플 펜슬이나 마우스는 작동)
+            if (e.pointerType === 'touch' && !allowFingerDrawing) return;
+
             isDrawing = true;
             const rect = canvas.getBoundingClientRect();
             lastX = e.clientX - rect.left;
@@ -292,6 +333,8 @@
 
         function draw(e) {
             if (!isDrawing) return;
+            if (e.pointerType === 'touch' && !allowFingerDrawing) return;
+
             e.preventDefault(); // 스크롤 등 기본 동작 방지
 
             const rect = canvas.getBoundingClientRect();
@@ -335,13 +378,21 @@
             if (historyStep < history.length) {
                 history.length = historyStep;
             }
-            history.push(canvas.toDataURL());
+            const dataUrl = canvas.toDataURL();
+            history.push(dataUrl);
             
             if (history.length > maxHistory) {
                 history.shift();
                 historyStep--;
             }
             updateUndoRedoButtons();
+
+            // 디바이스 로컬 스토리지에 자동 저장
+            try {
+                localStorage.setItem('savedDeviceNote', dataUrl);
+            } catch (err) {
+                console.warn('저장 공간 초과로 기기 자동 저장이 불가능할 수 있습니다.');
+            }
         }
 
         function undo() {
@@ -411,6 +462,10 @@
             ctx.restore();
             
             saveState();
+            
+            // 디바이스 자동 저장소에서도 완전히 삭제
+            localStorage.removeItem('savedDeviceNote');
+            
             showToast('캔버스가 초기화되었습니다.');
         }
 
