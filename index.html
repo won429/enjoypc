@@ -3,301 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PPT to PDF Converter</title>
+    <title>iPad Dark Notes</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- PDF 생성을 위한 jsPDF 라이브러리 추가 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         @font-face { font-family: 'Pretendard-Regular'; src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff'); font-weight: 400; font-style: normal; }
         @font-face { font-family: 'Pretendard-Bold'; src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Bold.woff') format('woff'); font-weight: 700; font-style: normal; }
         @font-face { font-family: 'Pretendard-Black'; src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Black.woff') format('woff'); font-weight: 900; font-style: normal; }
         
-        :root { 
-            --point-color: #3b82f6; /* 메인 테마 색상 (블루) */
-            --point-bg: rgba(59, 130, 246, 0.15); 
-            --app-bg: #0a0a0a; 
+        body { 
+            font-family: 'Pretendard-Regular', sans-serif; 
+            background-color: #0a0a0a;
+            /* 아이패드 제스처(새로고침, 스와이프 등) 방지 */
+            overscroll-behavior: none; 
+            touch-action: none; 
+            -webkit-user-select: none;
+            user-select: none;
         }
         
-        .app-bg { background-color: var(--app-bg) !important; transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .text-point { color: var(--point-color) !important; }
-        .bg-point { background-color: var(--point-color) !important; }
-        .bg-point-sub { background-color: var(--point-bg) !important; }
-        
-        body { font-family: 'Pretendard-Regular', sans-serif; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; touch-action: pan-y; }
         .font-black { font-family: 'Pretendard-Black', sans-serif; }
         .font-bold { font-family: 'Pretendard-Bold', sans-serif; }
 
-        .pt-safe { padding-top: max(20px, env(safe-area-inset-top)); }
-        .pt-main { padding-top: calc(max(20px, env(safe-area-inset-top)) + 70px); }
-        
-        #nav-indicator { will-change: transform, width; }
-        .nav-transition { transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .ctrl-item { transition: max-width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), padding 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.7s ease; overflow: hidden; white-space: nowrap; width: max-content; justify-self: end; }
-        .ctrl-show { max-width: 200px; opacity: 1; padding-left: 16px; padding-right: 16px; }
-        .ctrl-hide { max-width: 0px; opacity: 0; padding-left: 0px; padding-right: 0px; pointer-events: none; }
-        
-        #bottom-sheet { transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s; transform: translate(-50%, 120%); opacity: 0; }
-        #bottom-sheet.show { transform: translate(-50%, 0); opacity: 1; }
-        
-        .btn-collapse { max-width: 0px !important; padding-left: 0px !important; padding-right: 0px !important; opacity: 0 !important; pointer-events: none !important; margin-right: -4px !important; border-width: 0px !important; }
-        .tab-btn-anim { transition: all 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); overflow: hidden; max-width: 80px; white-space: nowrap; }
+        /* 캔버스 영역 */
+        #drawing-board {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            touch-action: none; /* 터치 스크롤 완벽 차단 */
+        }
 
-        /* 커스텀 파일 업로드 애니메이션 */
-        .upload-dashed { border: 2px dashed #333; transition: all 0.3s ease; }
-        .upload-dashed.dragover { border-color: var(--point-color); background-color: var(--point-bg); }
-        
-        /* 프로그레스 바 */
-        .progress-bar { transition: width 0.3s ease; }
+        /* 하단 툴바 UI 요소 */
+        .tool-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8E8E93;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .tool-btn.active {
+            background-color: #3b82f6; /* 포인트 블루 */
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        .tool-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* 색상 팔레트 요소 */
+        .color-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+        .color-btn.active {
+            transform: scale(1.15);
+            border-color: white;
+            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+        }
+
+        /* 굵기 조절 슬라이더 커스텀 */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 120px;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            margin-top: -7px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #3A3A3C;
+            border-radius: 2px;
+        }
     </style>
 </head>
-<body class="w-full h-[100dvh] bg-[#0a0a0a] flex justify-center items-center overflow-hidden">
-    <div id="mobile-wrapper" class="w-full h-full max-w-[430px] relative z-10 flex flex-col overflow-hidden sm:border-x border-white/10 sm:shadow-2xl app-bg">
+<body class="fixed inset-0 overflow-hidden w-full h-full">
+    
+    <!-- 최상단 헤더 -->
+    <header class="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-40 pointer-events-none">
+        <div class="flex flex-col pointer-events-auto bg-[#1C1C1E]/80 backdrop-blur-md border border-white/5 px-5 py-3 rounded-2xl shadow-lg">
+            <h1 class="text-[18px] font-black text-white tracking-tight leading-none mb-1">My Notes</h1>
+            <span class="text-[11px] font-bold text-gray-500">2026.04.13</span>
+        </div>
         
-        <!-- 상단 헤더 (기존 KBO 리그 형식 그대로 차용) -->
-        <header class="absolute top-0 left-0 right-0 pt-safe px-4 pb-2 z-20 app-bg">
-            <div class="mt-2 flex items-center gap-2 w-full pb-1">
-                <div class="flex items-center flex-1 bg-[#1C1C1E] rounded-full px-4 py-2 shadow-lg border border-white/5 min-h-[36px]">
-                    <div class="flex items-baseline gap-1.5 w-full overflow-hidden">
-                        <h1 id="di-main-text" class="text-[14px] font-black text-white flex items-center tracking-tight">ConvertPro<span class="w-1 h-1 bg-point rounded-full ml-1 mb-0.5"></span></h1>
-                        <span class="text-[11px] text-gray-400 font-medium whitespace-nowrap">PPT to PDF</span>
-                    </div>
-                </div>
-                <div id="ctrl-wrapper" class="grid bg-[#1C1C1E] rounded-full shadow-lg border border-white/5 h-[36px] shrink-0 overflow-hidden relative transition-all duration-700 origin-right">
-                    <div id="ctrl-mode" class="ctrl-item ctrl-show flex items-center justify-center gap-1 h-full" style="grid-area: 1/1;">
-                        <button onclick="setConvertMode('single')" id="btn-mode-single" class="tab-btn-anim px-3.5 py-1.5 text-[11px] font-bold rounded-full bg-point text-white shadow-sm active:scale-95 cursor-pointer shrink-0 relative z-50 pointer-events-auto">단일변환</button>
-                        <button onclick="setConvertMode('batch')" id="btn-mode-batch" class="tab-btn-anim px-3.5 py-1.5 text-[11px] font-medium rounded-full text-gray-400 active:scale-95 cursor-pointer shrink-0 relative z-50 pointer-events-auto">병합(다중)</button>
-                    </div>
-                    <div id="ctrl-sort" class="ctrl-item ctrl-hide flex items-center justify-center gap-1 h-full" style="grid-area: 1/1;">
-                        <span id="sort-text" class="text-[12px] font-bold text-gray-400">최신순</span>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- 화면 1: 업로드 및 변환 화면 (야구 캘린더 화면 대체) -->
-        <main id="upload-screen" class="flex flex-1 min-h-0 relative w-full flex-col app-bg overflow-y-auto scrollbar-hide pb-24">
-            <div class="px-5 pt-main flex-1 flex flex-col">
-                <div class="flex justify-between items-center mb-5">
-                    <h2 class="text-[22px] font-black text-white tracking-tight">새로운 변환</h2>
-                    <button class="w-8 h-8 rounded-full bg-[#1C1C1E] flex items-center justify-center text-gray-400 hover:text-white"><i class="fa-solid fa-clock-rotate-left text-sm"></i></button>
-                </div>
-
-                <!-- 드래그 앤 드롭 업로드 영역 -->
-                <div id="dropzone" class="upload-dashed rounded-3xl h-[280px] bg-[#141415] flex flex-col items-center justify-center cursor-pointer active:scale-[0.98] transition-transform relative mb-6" onclick="document.getElementById('file-input').click()">
-                    <input type="file" id="file-input" class="hidden" accept=".ppt, .pptx" onchange="handleFileSelect(event)">
-                    <div class="w-20 h-20 bg-[#1C1C1E] rounded-full flex items-center justify-center mb-4 shadow-inner border border-white/5 relative">
-                        <i class="fa-solid fa-file-powerpoint text-3xl text-point"></i>
-                        <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-point rounded-full flex items-center justify-center border-2 border-[#141415]"><i class="fa-solid fa-plus text-white text-[10px]"></i></div>
-                    </div>
-                    <span class="text-[17px] font-bold text-white mb-2 tracking-tight">PPT 파일을 업로드하세요</span>
-                    <span class="text-[12px] text-gray-500 font-medium">드래그 앤 드롭 또는 터치하여 찾아보기</span>
-                    <div class="mt-4 bg-white/5 px-3 py-1 rounded-md">
-                        <span class="text-[10px] text-gray-400 font-bold">지원: .ppt, .pptx (최대 50MB)</span>
-                    </div>
-                </div>
-
-                <!-- 선택된 파일 리스트 -->
-                <div id="selected-files" class="flex flex-col gap-3 mb-6 hidden">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-[13px] font-bold text-gray-400">선택된 파일</span>
-                        <span id="selected-count" class="text-[11px] font-black text-white bg-[#1C1C1E] px-2 py-0.5 rounded-md">1개</span>
-                    </div>
-                    <!-- 파일 카드 -->
-                    <div class="bg-[#1C1C1E] rounded-2xl p-4 flex items-center justify-between border border-white/5 shadow-sm">
-                        <div class="flex items-center gap-3.5">
-                            <div class="w-10 h-10 bg-[#2A2A2C] rounded-xl flex items-center justify-center">
-                                <i class="fa-solid fa-file-powerpoint text-[#F24E1E] text-lg"></i>
-                            </div>
-                            <div class="flex flex-col">
-                                <span id="selected-file-name" class="text-[14px] font-bold text-white truncate max-w-[180px]">Q3_회사_소개서_최종.pptx</span>
-                                <span id="selected-file-size" class="text-[11px] text-gray-500 font-medium">4.2 MB</span>
-                            </div>
-                        </div>
-                        <button onclick="clearFiles()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-sm"></i></button>
-                    </div>
-                </div>
-
-                <!-- 변환 진행바 (기본 숨김) -->
-                <div id="progress-container" class="hidden flex-col gap-3 mb-6 bg-[#1C1C1E] rounded-3xl p-6 border border-white/5">
-                    <div class="flex justify-between items-end mb-2">
-                        <div class="flex flex-col">
-                            <span class="text-[15px] font-black text-white mb-1">변환 중...</span>
-                            <span class="text-[11px] text-gray-400">PDF로 렌더링하고 있습니다</span>
-                        </div>
-                        <span id="progress-text" class="text-[24px] font-black text-point leading-none">0%</span>
-                    </div>
-                    <div class="w-full h-2.5 bg-[#2A2A2C] rounded-full overflow-hidden">
-                        <div id="progress-bar" class="h-full bg-point rounded-full progress-bar w-0"></div>
-                    </div>
-                </div>
-
-                <!-- 변환 성공 (기본 숨김) -->
-                <div id="success-container" class="hidden flex-col items-center justify-center bg-[#1C1C1E] rounded-3xl p-8 border border-white/5 mb-6 text-center">
-                    <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
-                        <i class="fa-solid fa-check text-2xl text-green-500"></i>
-                    </div>
-                    <h3 class="text-[18px] font-black text-white mb-1.5">변환 완료!</h3>
-                    <p class="text-[12px] text-gray-400 mb-6">파일이 성공적으로 PDF로 변환되었습니다.</p>
-                    <div class="flex gap-3 w-full">
-                        <button onclick="resetUpload()" class="flex-1 py-3.5 rounded-xl bg-[#2A2A2C] text-[14px] font-bold text-white active:scale-95 transition-transform">새로하기</button>
-                        <button onclick="downloadPdf()" class="flex-1 py-3.5 rounded-xl bg-point text-[14px] font-bold text-white active:scale-95 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.3)]">다운로드 <i class="fa-solid fa-download ml-1"></i></button>
-                    </div>
-                </div>
-
-                <div class="mt-auto">
-                    <button id="btn-convert" onclick="startConversion()" class="w-full py-4 rounded-2xl bg-point text-white text-[16px] font-black shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-transform opacity-50 pointer-events-none">PDF로 변환하기</button>
-                </div>
-            </div>
-        </main>
-
-        <!-- 화면 2: 히스토리 화면 (야구 순위 화면 대체) -->
-        <main id="history-screen" class="hidden flex-1 min-h-0 relative w-full flex-col app-bg overflow-y-auto scrollbar-hide pb-24">
-            <div class="w-full pt-main px-5">
-                <div class="flex justify-between items-center mb-5">
-                    <h2 class="text-[22px] font-black text-white tracking-tight">최근 변환 내역</h2>
-                    <span id="history-count" class="text-[11px] font-bold text-gray-500 bg-[#1C1C1E] px-2.5 py-1 rounded-lg">총 0개</span>
-                </div>
-                
-                <div class="flex flex-col gap-3" id="history-list">
-                    <!-- 자바스크립트로 동적 렌더링 됩니다 -->
-                </div>
-            </div>
-        </main>
-
-        <!-- 화면 3: 설정 화면 (야구 응원가 화면 대체) -->
-        <main id="settings-screen" class="hidden flex-1 min-h-0 relative w-full flex-col app-bg overflow-y-auto scrollbar-hide pb-24">
-            <div class="w-full pt-main px-5">
-                <h2 class="text-[22px] font-black text-white tracking-tight mb-6">환경 설정</h2>
-                
-                <div class="bg-[#1C1C1E] rounded-[20px] border border-white/5 overflow-hidden mb-5">
-                    <div class="p-4 flex items-center justify-between border-b border-white/5">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-[#2A2A2C] flex items-center justify-center text-white"><i class="fa-solid fa-image text-[13px]"></i></div>
-                            <span class="text-[15px] font-bold text-white">고화질 이미지 유지</span>
-                        </div>
-                        <div class="w-10 h-6 bg-point rounded-full relative cursor-pointer"><div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow"></div></div>
-                    </div>
-                    <div class="p-4 flex items-center justify-between border-b border-white/5">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-[#2A2A2C] flex items-center justify-center text-white"><i class="fa-solid fa-font text-[13px]"></i></div>
-                            <span class="text-[15px] font-bold text-white">폰트 임베딩 (깨짐 방지)</span>
-                        </div>
-                        <div class="w-10 h-6 bg-point rounded-full relative cursor-pointer"><div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow"></div></div>
-                    </div>
-                    <div class="p-4 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-[#2A2A2C] flex items-center justify-center text-white"><i class="fa-solid fa-lock text-[13px]"></i></div>
-                            <span class="text-[15px] font-bold text-white">PDF 암호 설정</span>
-                        </div>
-                        <div class="w-10 h-6 bg-gray-600 rounded-full relative cursor-pointer"><div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow"></div></div>
-                    </div>
-                </div>
-
-                <h3 class="text-[13px] font-bold text-gray-500 mb-3 px-2">시스템</h3>
-                <div class="bg-[#1C1C1E] rounded-[20px] border border-white/5 overflow-hidden">
-                    <div class="p-4 flex items-center justify-between border-b border-white/5 cursor-pointer active:bg-white/5">
-                        <span class="text-[15px] font-bold text-white">캐시 데이터 삭제</span>
-                        <span class="text-[12px] text-gray-400">14.2 MB</span>
-                    </div>
-                    <div class="p-4 flex items-center justify-between border-b border-white/5 cursor-pointer active:bg-white/5">
-                        <span class="text-[15px] font-bold text-white">이용 약관</span>
-                        <i class="fa-solid fa-chevron-right text-[12px] text-gray-500"></i>
-                    </div>
-                    <div class="p-4 flex items-center justify-between cursor-pointer active:bg-white/5">
-                        <span class="text-[15px] font-bold text-white">앱 버전</span>
-                        <span class="text-[12px] text-gray-400">v2.1.0</span>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- 하단 바텀 시트 (파일 상세/다운로드) - 기존 날짜 클릭 시트 활용 -->
-        <div id="bottom-sheet" class="absolute bottom-24 left-1/2 w-[92%] z-30 bg-[#1C1C1E] border border-white/5 rounded-[24px] p-5 flex flex-col shadow-2xl">
-            <div class="flex justify-between items-start border-b border-white/5 pb-4 mb-4">
-                <div class="flex flex-col gap-1.5 w-[85%]">
-                    <span id="sheet-title" class="text-[18px] font-black text-white tracking-tight truncate">Q3_기획안_최종본.pdf</span>
-                    <span id="sheet-date" class="text-[12px] font-bold text-gray-400">2026.04.13 14:30 변환됨</span>
-                </div>
-                <button onclick="closeBottomSheet()" class="w-8 h-8 rounded-full bg-[#2A2A2C] flex items-center justify-center text-white active:scale-95 transition-transform"><i class="fa-solid fa-xmark text-sm"></i></button>
+        <div class="flex gap-2 pointer-events-auto">
+            <!-- 실행 취소 / 다시 실행 -->
+            <div class="flex bg-[#1C1C1E]/80 backdrop-blur-md border border-white/5 rounded-full p-1 shadow-lg">
+                <button onclick="undo()" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors active:scale-95 disabled:opacity-30" id="btn-undo">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+                <button onclick="redo()" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors active:scale-95 disabled:opacity-30" id="btn-redo">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
             </div>
             
-            <div class="flex justify-around items-center mb-6 bg-[#242426] p-4 rounded-2xl">
-                <div class="flex flex-col items-center gap-1.5">
-                    <span class="text-[10px] font-bold text-gray-500">원본 크기</span>
-                    <span id="sheet-original-size" class="text-[15px] font-black text-white">4.2 MB</span>
+            <!-- 저장 버튼 -->
+            <button onclick="saveNote()" class="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/5 px-4 h-12 rounded-full flex items-center justify-center gap-2 text-white font-bold text-[14px] hover:bg-white/10 transition-colors active:scale-95 shadow-lg">
+                <i class="fa-solid fa-download"></i> 이미지 저장
+            </button>
+        </div>
+    </header>
+
+    <!-- 드로잉 캔버스 -->
+    <canvas id="drawing-board"></canvas>
+
+    <!-- 하단 플로팅 툴바 -->
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <div class="bg-[#1C1C1E]/90 backdrop-blur-xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.8)] rounded-full px-5 py-3 flex items-center gap-6">
+            
+            <!-- 도구 선택 (펜 / 지우개) -->
+            <div class="flex gap-2 items-center bg-[#0a0a0a] p-1.5 rounded-full border border-white/5">
+                <div class="tool-btn active" id="tool-pen" onclick="setTool('pen')">
+                    <i class="fa-solid fa-pen text-[18px]"></i>
                 </div>
-                <div class="w-px h-8 bg-white/10"></div>
-                <div class="flex flex-col items-center gap-1.5">
-                    <span class="text-[10px] font-bold text-gray-500">PDF 크기</span>
-                    <span id="sheet-pdf-size" class="text-[15px] font-black text-point">3.2 MB</span>
-                </div>
-                <div class="w-px h-8 bg-white/10"></div>
-                <div class="flex flex-col items-center gap-1.5">
-                    <span class="text-[10px] font-bold text-gray-500">페이지 수</span>
-                    <span class="text-[15px] font-black text-white">알 수 없음</span>
+                <div class="tool-btn" id="tool-eraser" onclick="setTool('eraser')">
+                    <i class="fa-solid fa-eraser text-[18px]"></i>
                 </div>
             </div>
+
+            <div class="w-px h-8 bg-gray-700/50"></div>
+
+            <!-- 색상 팔레트 -->
+            <div class="flex items-center gap-3" id="color-palette">
+                <div class="color-btn active" style="background-color: #FFFFFF;" onclick="setColor('#FFFFFF', this)"></div>
+                <div class="color-btn" style="background-color: #FF3B30;" onclick="setColor('#FF3B30', this)"></div>
+                <div class="color-btn" style="background-color: #FF9500;" onclick="setColor('#FF9500', this)"></div>
+                <div class="color-btn" style="background-color: #34C759;" onclick="setColor('#34C759', this)"></div>
+                <div class="color-btn" style="background-color: #007AFF;" onclick="setColor('#007AFF', this)"></div>
+            </div>
+
+            <div class="w-px h-8 bg-gray-700/50"></div>
+
+            <!-- 선 굵기 조절 -->
+            <div class="flex items-center gap-3 px-2">
+                <i class="fa-solid fa-circle text-[8px] text-gray-500"></i>
+                <input type="range" id="line-width" min="1" max="30" value="4" oninput="setLineWidth(this.value)">
+                <i class="fa-solid fa-circle text-[16px] text-gray-500"></i>
+            </div>
+
+            <div class="w-px h-8 bg-gray-700/50"></div>
+
+            <!-- 전체 지우기 -->
+            <button onclick="clearCanvasConfirm()" class="w-10 h-10 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500/10 transition-colors active:scale-95">
+                <i class="fa-regular fa-trash-can text-[18px]"></i>
+            </button>
             
-            <div class="flex flex-col gap-2.5">
-                <button onclick="downloadPdf(); closeBottomSheet()" class="w-full py-3.5 rounded-xl bg-point text-[15px] font-bold text-white active:scale-95 transition-transform flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-download"></i> 디바이스에 저장
-                </button>
-                <button onclick="showToast('공유 링크가 복사되었습니다.')" class="w-full py-3.5 rounded-xl bg-[#2A2A2C] text-[15px] font-bold text-white active:scale-95 transition-transform flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> 파일 공유하기
-                </button>
-                <button onclick="closeBottomSheet(); showToast('삭제되었습니다.')" class="w-full py-3.5 rounded-xl bg-transparent border border-red-500/30 text-[15px] font-bold text-red-500 active:scale-95 transition-transform flex items-center justify-center gap-2 mt-1">
-                    <i class="fa-regular fa-trash-can"></i> 서버에서 삭제
-                </button>
+        </div>
+    </div>
+
+    <!-- 전체 지우기 확인 모달 -->
+    <div id="clear-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center opacity-0 transition-opacity duration-300">
+        <div class="bg-[#1C1C1E] border border-white/10 rounded-3xl p-6 w-[90%] max-w-[320px] flex flex-col items-center shadow-2xl transform scale-95 transition-transform duration-300" id="clear-modal-content">
+            <div class="w-14 h-14 rounded-full bg-red-500/20 flex items-center justify-center mb-4">
+                <i class="fa-regular fa-trash-can text-2xl text-red-500"></i>
+            </div>
+            <h3 class="text-[18px] font-black text-white mb-2">필기 전체 삭제</h3>
+            <p class="text-[14px] text-gray-400 text-center mb-6">캔버스의 모든 내용이 지워집니다.<br>계속하시겠습니까?</p>
+            <div class="flex gap-3 w-full">
+                <button onclick="closeClearModal()" class="flex-1 py-3 rounded-xl bg-[#2A2A2C] text-white font-bold text-[15px] active:scale-95 transition-transform">취소</button>
+                <button onclick="clearCanvas()" class="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold text-[15px] active:scale-95 transition-transform">모두 지우기</button>
             </div>
         </div>
+    </div>
 
-        <!-- 하단 네비게이션 (기존 형식 유지, 아이콘/텍스트 변경) -->
-        <nav id="bottom-nav" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[380px] px-2 touch-pan-x select-none">
-            <div class="flex items-center justify-between bg-[#1C1C1E] shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-white/10 rounded-full p-1 relative">
-                <div id="nav-indicator" class="absolute top-1 bottom-1 bg-[#2A2A2C] rounded-full border border-white/5 z-0 nav-transition" style="left: 4px; width: 66px;"></div>
-                <button class="relative py-1.5 flex-1 rounded-full group z-10 active:scale-95 transition-transform" onclick="switchTab(0)">
-                    <div class="flex flex-col items-center gap-0.5 pointer-events-none">
-                        <i class="fa-solid fa-wand-magic-sparkles text-base text-point"></i>
-                        <span class="text-[10px] font-bold text-white">변환</span>
-                    </div>
-                </button>
-                <button class="relative py-1.5 flex-1 rounded-full group z-10 active:scale-95 transition-transform" onclick="switchTab(1)">
-                    <div class="flex flex-col items-center gap-0.5 pointer-events-none">
-                        <i class="fa-solid fa-clock-rotate-left text-base text-gray-500"></i>
-                        <span class="text-[10px] font-medium text-gray-500">기록</span>
-                    </div>
-                </button>
-                <button class="relative py-1.5 flex-1 rounded-full group z-10 active:scale-95 transition-transform" onclick="switchTab(2)">
-                    <div class="flex flex-col items-center gap-0.5 pointer-events-none">
-                        <i class="fa-solid fa-gear text-base text-gray-500"></i>
-                        <span class="text-[10px] font-medium text-gray-500">설정</span>
-                    </div>
-                </button>
-            </div>
-        </nav>
-
-        <div id="toast-msg"></div>
+    <!-- 알림 토스트 -->
+    <div id="toast-msg" class="fixed top-24 left-1/2 -translate-x-1/2 bg-white text-[#0a0a0a] px-6 py-3 rounded-full text-[14px] font-black shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-[100] transition-all duration-300 opacity-0 transform -translate-y-4 pointer-events-none">
+        알림 메시지
     </div>
 
     <script>
-        let currentTabIndex = 0;
-        let selectedMode = 'single';
-        let isFileSelected = false;
-        let currentFile = null;
-        let conversionHistory = [];
-        let currentSheetItem = null;
+        const canvas = document.getElementById('drawing-board');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        
+        let isDrawing = false;
+        let currentTool = 'pen'; // 'pen' or 'eraser'
+        let currentColor = '#FFFFFF';
+        let currentLineWidth = 4;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Undo / Redo 기능용 배열
+        let history = [];
+        let historyStep = -1;
+        const maxHistory = 30; // 메모리 방지를 위해 30번까지만 저장
 
         function showToast(msg) {
             let toast = document.getElementById('toast-msg');
-            toast.className = 'fixed top-12 left-1/2 -translate-x-1/2 bg-white text-[#0a0a0a] px-5 py-2.5 rounded-full text-[13px] font-black shadow-2xl z-[100] transition-all duration-300 opacity-0 transform -translate-y-4';
             toast.innerText = msg; 
-            void toast.offsetWidth; 
             toast.classList.remove('opacity-0', '-translate-y-4'); 
             toast.classList.add('opacity-100', 'translate-y-0');
             setTimeout(() => { 
@@ -306,273 +217,222 @@
             }, 2000);
         }
 
-        function switchTab(index) {
-            currentTabIndex = index; 
-            if (navigator.vibrate) navigator.vibrate(10);
+        // 아이패드 Retina 디스플레이 및 리사이징 대응
+        function resizeCanvas() {
+            const tempState = ctx.getImageData(0, 0, canvas.width, canvas.height); // 기존 그림 임시 저장
             
-            const screens = [ document.getElementById('upload-screen'), document.getElementById('history-screen'), document.getElementById('settings-screen') ];
-            closeBottomSheet();
+            // 실제 디스플레이 픽셀 비율 대응
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
             
-            const navButtons = document.querySelectorAll('#bottom-nav button'); 
-            const indicator = document.getElementById('nav-indicator');
+            // CSS 사이즈는 100%로 고정
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
             
-            if(navButtons[index] && indicator) { 
-                indicator.style.width = `${navButtons[index].offsetWidth}px`; 
-                indicator.style.transform = `translateX(${navButtons[index].offsetLeft - 4}px)`; 
-            }
+            ctx.scale(dpr, dpr);
             
-            navButtons.forEach((btn, i) => {
-                const icon = btn.querySelector('i'); const label = btn.querySelector('span');
-                if (icon && label) {
-                    let iconName = i===0?'fa-wand-magic-sparkles':(i===1?'fa-clock-rotate-left':'fa-gear');
-                    icon.className = `fa-solid ${iconName} text-base ${i===index?'text-point':'text-gray-500 transition-colors'}`;
-                    label.className = `text-[10px] whitespace-nowrap transition-colors ${i===index?'text-white font-bold':'text-gray-500 font-medium'}`;
-                }
-            });
+            // 배경색 채우기
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
-            const ctrlMode = document.getElementById('ctrl-mode'); 
-            const ctrlSort = document.getElementById('ctrl-sort'); 
-            const ctrlWrapper = document.getElementById('ctrl-wrapper'); 
-            const mainText = document.getElementById('di-main-text');
-            
-            mainText.innerHTML = (index === 0 ? `ConvertPro` : (index === 1 ? `History` : `Settings`)) + `<span class="w-1 h-1 bg-point rounded-full ml-1 mb-0.5"></span>`;
-            
-            if (index === 0) { 
-                ctrlMode.className='ctrl-item ctrl-show flex items-center justify-center gap-1 h-full'; 
-                ctrlSort.className='ctrl-item ctrl-hide flex items-center justify-center gap-1 h-full'; 
-                ctrlWrapper.classList.remove('opacity-0'); 
-            } else if (index === 1) { 
-                ctrlMode.className='ctrl-item ctrl-hide flex items-center justify-center gap-1 h-full'; 
-                ctrlSort.className='ctrl-item ctrl-show flex items-center justify-center gap-1 h-full'; 
-                ctrlWrapper.classList.remove('opacity-0'); 
-            } else if (index === 2) { 
-                ctrlWrapper.classList.add('opacity-0'); 
-            }
+            // 선 그리기 기본 설정
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
-            screens.forEach((screen, i) => { 
-                screen.classList.toggle('hidden', i !== index); 
-                screen.classList.toggle('flex', i === index); 
-            });
-        }
-
-        function setConvertMode(mode) {
-            selectedMode = mode;
-            ['single', 'batch'].forEach(id => { 
-                const btn = document.getElementById(`btn-mode-${id}`); 
-                btn.classList.remove('font-bold', 'bg-point', 'text-white', 'shadow-sm'); 
-                btn.classList.add('font-medium', 'text-gray-400'); 
-            });
-            const targetBtn = document.getElementById(`btn-mode-${mode}`); 
-            targetBtn.classList.remove('font-medium', 'text-gray-400'); 
-            targetBtn.classList.add('font-bold', 'bg-point', 'text-white', 'shadow-sm');
-        }
-
-        // 날짜 포맷 변환 함수
-        function formatDate(date) {
-            const pad = n => n < 10 ? '0'+n : n;
-            return `${date.getFullYear()}.${pad(date.getMonth()+1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-        }
-
-        // 히스토리 동적 렌더링 함수
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            const count = document.getElementById('history-count');
-            count.innerText = `총 ${conversionHistory.length}개`;
-            list.innerHTML = '';
-            
-            if (conversionHistory.length === 0) {
-                list.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-gray-500"><i class="fa-solid fa-clock-rotate-left text-4xl mb-4 opacity-30"></i><span class="text-[14px]">최근 변환 기록이 없습니다.</span></div>`;
-                return;
-            }
-
-            conversionHistory.forEach(item => {
-                list.innerHTML += `
-                <div class="bg-[#1C1C1E] rounded-[20px] p-4 flex flex-col cursor-pointer active:scale-[0.98] transition-transform shadow-sm border border-white/5" onclick="openFileDetails(${item.id})">
-                    <div class="flex justify-between items-center border-b border-white/5 pb-3 mb-3">
-                        <span class="text-[11px] font-bold text-gray-400"><i class="fa-regular fa-calendar mr-1.5"></i>${formatDate(item.date)}</span>
-                        <span class="text-[10px] font-bold text-white bg-green-600/80 px-2 py-0.5 rounded">완료</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3 w-full">
-                            <div class="w-10 h-10 rounded-xl bg-[#2A2A2C] flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-file-pdf text-red-500 text-xl"></i>
-                            </div>
-                            <div class="flex flex-col flex-1 truncate">
-                                <span class="text-[15px] font-bold text-white truncate">${item.pdfName}</span>
-                                <span class="text-[12px] text-gray-500 mt-0.5">${item.pdfSize} MB • 원본: PPTX</span>
-                            </div>
-                            <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 shrink-0">
-                                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            });
-        }
-
-        // 파일 선택 시
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if(file) {
-                currentFile = {
-                    name: file.name,
-                    size: (file.size / 1024 / 1024).toFixed(2)
-                };
-                
-                document.getElementById('selected-file-name').innerText = currentFile.name;
-                document.getElementById('selected-file-size').innerText = currentFile.size + ' MB';
-
-                document.getElementById('dropzone').classList.add('hidden');
-                document.getElementById('selected-files').classList.remove('hidden');
-                document.getElementById('selected-files').classList.add('flex');
-                
-                const btn = document.getElementById('btn-convert');
-                btn.classList.remove('opacity-50', 'pointer-events-none');
-                btn.innerText = "PDF로 변환하기";
-                isFileSelected = true;
+            // 저장해둔 그림 복구 (리사이징 시)
+            if(historyStep === -1) {
+                saveState(); // 최초 빈 화면 저장
+            } else {
+                ctx.putImageData(tempState, 0, 0);
             }
         }
 
-        function clearFiles() {
-            document.getElementById('file-input').value = "";
-            document.getElementById('dropzone').classList.remove('hidden');
-            document.getElementById('selected-files').classList.add('hidden');
-            document.getElementById('selected-files').classList.remove('flex');
-            
-            const btn = document.getElementById('btn-convert');
-            btn.classList.add('opacity-50', 'pointer-events-none');
-            isFileSelected = false;
-            currentFile = null;
+        // 도구 선택 로직 (펜/지우개)
+        function setTool(tool) {
+            currentTool = tool;
+            document.getElementById('tool-pen').classList.remove('active');
+            document.getElementById('tool-eraser').classList.remove('active');
+            document.getElementById(`tool-${tool}`).classList.add('active');
         }
 
-        function startConversion() {
-            document.getElementById('selected-files').classList.add('hidden');
-            document.getElementById('selected-files').classList.remove('flex');
-            document.getElementById('btn-convert').classList.add('hidden');
-            
-            const progContainer = document.getElementById('progress-container');
-            progContainer.classList.remove('hidden');
-            progContainer.classList.add('flex');
-            
-            const progBar = document.getElementById('progress-bar');
-            const progText = document.getElementById('progress-text');
-            
-            let width = 0;
-            const interval = setInterval(() => {
-                width += Math.floor(Math.random() * 15) + 5;
-                if(width >= 100) {
-                    width = 100;
-                    clearInterval(interval);
-                    
-                    // --- 유효한 (손상되지 않은) 실제 PDF 파일 생성 (jsPDF 라이브러리 사용) ---
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    
-                    // 영문 기본 폰트를 이용해 안내 문구 기입
-                    doc.setFontSize(20);
-                    doc.text("ConvertPro - PDF Result", 20, 30);
-                    
-                    doc.setFontSize(14);
-                    doc.text(`Original File: ${currentFile.name}`, 20, 50);
-                    doc.text(`Converted On: ${formatDate(new Date())}`, 20, 60);
-                    
-                    doc.setFontSize(10);
-                    doc.setTextColor(120);
-                    doc.text("Notice: This is a structurally valid PDF file generated locally in your browser.", 20, 80);
-                    doc.text("Please note that front-end JavaScript alone cannot fully render PPTX slides.", 20, 88);
-                    doc.text("To accurately convert layouts, fonts, and images from the PPT file,", 20, 96);
-                    doc.text("this interface must be connected to a backend server or a conversion API.", 20, 104);
-                    
-                    // PDF Blob 생성 (구조적으로 유효한 PDF 포맷)
-                    const pdfBlob = doc.output('blob');
-                    const pdfBlobUrl = URL.createObjectURL(pdfBlob);
-                    // -------------------------------------------------------------------
-                    
-                    const pdfSize = (pdfBlob.size / 1024 / 1024).toFixed(3); 
-                    const historyItem = {
-                        id: Date.now(),
-                        originalName: currentFile.name,
-                        pdfName: currentFile.name.replace(/\.[^/.]+$/, "") + ".pdf",
-                        originalSize: currentFile.size,
-                        pdfSize: pdfSize < 0.01 ? "0.01" : pdfSize,
-                        date: new Date(),
-                        blobUrl: pdfBlobUrl // 유효한 PDF 객체의 URL 저장
-                    };
-                    
-                    conversionHistory.unshift(historyItem); // 맨 앞에 추가
-                    currentSheetItem = historyItem; 
-                    renderHistory(); // UI 업데이트
+        // 색상 선택 로직
+        function setColor(color, element) {
+            currentTool = 'pen'; // 색상을 고르면 자동으로 펜으로 변경
+            currentColor = color;
+            document.getElementById('tool-eraser').classList.remove('active');
+            document.getElementById('tool-pen').classList.add('active');
 
-                    setTimeout(() => {
-                        progContainer.classList.add('hidden');
-                        progContainer.classList.remove('flex');
-                        const sucContainer = document.getElementById('success-container');
-                        sucContainer.classList.remove('hidden');
-                        sucContainer.classList.add('flex');
-                    }, 500);
-                }
-                progBar.style.width = width + '%';
-                progText.innerText = width + '%';
-            }, 150); 
+            const colorBtns = document.querySelectorAll('.color-btn');
+            colorBtns.forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
         }
 
-        function resetUpload() {
-            document.getElementById('success-container').classList.add('hidden');
-            document.getElementById('success-container').classList.remove('flex');
-            document.getElementById('progress-bar').style.width = '0%';
-            document.getElementById('progress-text').innerText = '0%';
-            
-            const btn = document.getElementById('btn-convert');
-            btn.classList.remove('hidden');
-            
-            clearFiles();
+        // 선 굵기 조절
+        function setLineWidth(width) {
+            currentLineWidth = width;
         }
 
-        // 실제 파일 다운로드 트리거
-        function downloadPdf() {
-            if (!currentSheetItem || !currentSheetItem.blobUrl) return;
+        // 포인터 이벤트 핸들러 (마우스, 터치, 펜슬 모두 지원)
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            lastX = e.clientX - rect.left;
+            lastY = e.clientY - rect.top;
+
+            // 점 하나만 찍을 때를 대비해 beginPath
+            ctx.beginPath();
+            ctx.arc(lastX, lastY, currentLineWidth / 2, 0, Math.PI * 2);
+            ctx.fillStyle = currentTool === 'eraser' ? '#0a0a0a' : currentColor;
+            ctx.fill();
             
-            showToast('PDF 다운로드가 완료되었습니다.');
-            
-            // 생성된 유효한 PDF Blob URL을 통해 파일 다운로드
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = currentSheetItem.blobUrl;
-            a.download = currentSheetItem.pdfName;
-            document.body.appendChild(a);
-            a.click();
-            
-            document.body.removeChild(a);
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
         }
 
-        // 클릭된 기록의 바텀 시트 열람
-        function openFileDetails(id) {
-            currentSheetItem = conversionHistory.find(item => item.id === id);
-            if(!currentSheetItem) return;
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault(); // 스크롤 등 기본 동작 방지
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            ctx.lineWidth = currentLineWidth;
             
-            document.getElementById('sheet-title').innerText = currentSheetItem.pdfName;
-            document.getElementById('sheet-date').innerText = formatDate(currentSheetItem.date) + ' 변환됨';
-            document.getElementById('sheet-original-size').innerText = currentSheetItem.originalSize + ' MB';
-            document.getElementById('sheet-pdf-size').innerText = currentSheetItem.pdfSize + ' MB';
+            if (currentTool === 'eraser') {
+                ctx.strokeStyle = '#0a0a0a'; // 배경색과 동일한 색으로 덮어씀
+            } else {
+                ctx.strokeStyle = currentColor;
+            }
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
             
-            const sheet = document.getElementById('bottom-sheet');
-            sheet.classList.add('show');
+            lastX = x;
+            lastY = y;
         }
 
-        function closeBottomSheet() { 
-            const sheet = document.getElementById('bottom-sheet'); 
-            if (sheet) sheet.classList.remove('show'); 
+        function stopDrawing() {
+            if (isDrawing) {
+                isDrawing = false;
+                ctx.closePath();
+                saveState(); // 그림을 그린 후 상태 저장
+            }
         }
 
-        // 드래그 앤 드롭 UI 이펙트
-        const dropzone = document.getElementById('dropzone');
-        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
-        dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('dragover'); });
-        dropzone.addEventListener('drop', (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); handleFileSelect({target: {files: e.dataTransfer.files}}); });
+        // 이벤트 리스너 등록 (Pointer Events 사용으로 터치/펜슬/마우스 통합 관리)
+        canvas.addEventListener('pointerdown', startDrawing);
+        canvas.addEventListener('pointermove', draw);
+        canvas.addEventListener('pointerup', stopDrawing);
+        canvas.addEventListener('pointercancel', stopDrawing);
+        canvas.addEventListener('pointerout', stopDrawing);
 
+        // 히스토리 관리 (Undo / Redo)
+        function saveState() {
+            historyStep++;
+            // 이전 이후의 배열(redo할 미래 데이터)은 날려버림
+            if (historyStep < history.length) {
+                history.length = historyStep;
+            }
+            history.push(canvas.toDataURL());
+            
+            if (history.length > maxHistory) {
+                history.shift();
+                historyStep--;
+            }
+            updateUndoRedoButtons();
+        }
+
+        function undo() {
+            if (historyStep > 0) {
+                historyStep--;
+                restoreState();
+            }
+        }
+
+        function redo() {
+            if (historyStep < history.length - 1) {
+                historyStep++;
+                restoreState();
+            }
+        }
+
+        function restoreState() {
+            const img = new Image();
+            img.src = history[historyStep];
+            img.onload = function () {
+                // 스케일링 무시하고 덮어쓰기 위해 transform 잠시 해제
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                ctx.restore();
+            };
+            updateUndoRedoButtons();
+        }
+
+        function updateUndoRedoButtons() {
+            document.getElementById('btn-undo').disabled = historyStep <= 0;
+            document.getElementById('btn-redo').disabled = historyStep >= history.length - 1;
+        }
+
+        // 전체 지우기 모달 로직
+        function clearCanvasConfirm() {
+            const modal = document.getElementById('clear-modal');
+            const content = document.getElementById('clear-modal-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeClearModal() {
+            const modal = document.getElementById('clear-modal');
+            const content = document.getElementById('clear-modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function clearCanvas() {
+            closeClearModal();
+            
+            // 현재 화면 전체를 배경색으로 다시 칠함
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+            
+            saveState();
+            showToast('캔버스가 초기화되었습니다.');
+        }
+
+        // 이미지 저장 (갤러리 다운로드)
+        function saveNote() {
+            const link = document.createElement('a');
+            link.download = `Note_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast('노트가 이미지로 저장되었습니다.');
+        }
+
+        // 초기화
+        window.addEventListener('resize', () => {
+            // 모바일 키보드 등으로 인한 불필요한 리사이징 방지
+            if(window.innerWidth === canvas.width && window.innerHeight === canvas.height) return;
+            resizeCanvas();
+        });
+        
         window.onload = () => {
-            switchTab(0);
-            renderHistory(); // 비어있는 히스토리 렌더링
+            resizeCanvas();
+            updateUndoRedoButtons();
         };
     </script>
 </body>
