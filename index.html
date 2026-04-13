@@ -31,10 +31,18 @@
         /* 필기 시 화면 밀림 방지 */
         #canvas-screen, #canvas-wrapper { touch-action: none; overscroll-behavior: none; }
 
-        /* 알약 툴바 내 버튼 요소 */
+        /* 드로잉 보드는 투명하게 유지하여 배경 캔버스가 보이도록 설정 */
+        #drawing-board {
+            width: 100%;
+            height: 100%;
+            display: block;
+            touch-action: none; 
+        }
+
+        /* 새로워진 알약 툴바 디자인 (크기 축소 및 동기화) */
         .tool-btn {
-            width: 40px;
-            height: 40px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -46,13 +54,13 @@
         .tool-btn.active {
             background-color: #3b82f6; 
             color: white;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); /* 은은한 블루 글로우 */
         }
         .tool-btn:active { transform: scale(0.92); }
 
         .color-btn {
-            width: 24px;
-            height: 24px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             border: 2px solid transparent;
             cursor: pointer;
@@ -61,17 +69,17 @@
         .color-btn.active {
             transform: scale(1.2);
             border-color: white;
-            box-shadow: 0 0 8px rgba(255,255,255,0.4);
+            box-shadow: 0 0 10px rgba(255,255,255,0.4);
         }
 
-        /* 굵기 조절 슬라이더 */
-        input[type=range] { -webkit-appearance: none; width: 100px; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #ffffff; cursor: pointer; margin-top: -6px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #3A3A3C; border-radius: 2px; }
+        /* 얇고 세련된 굵기 조절 슬라이더 */
+        input[type=range] { -webkit-appearance: none; width: 60px; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #ffffff; cursor: pointer; margin-top: -6px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 2px; cursor: pointer; background: #444; border-radius: 1px; }
 
-        .doc-thumb { position: relative; border-radius: 8px; overflow: hidden; background: white; }
+        .doc-thumb { position: relative; border-radius: 8px; overflow: hidden; background: white; border: 1px solid rgba(255,255,255,0.1); }
         .doc-thumb::before {
-            content: ''; position: absolute; top: 0; left: 0;
+            content: ''; position: absolute; top: -1px; left: -1px;
             border-width: 14px; border-style: solid;
             border-color: #000000 #f1f5f9 #f1f5f9 #000000; 
             border-bottom-right-radius: 6px;
@@ -85,21 +93,20 @@
     <!-- 화면 1: 문서 목록 화면 (홈 화면) -->
     <!-- ========================================== -->
     <div id="document-list-screen" class="w-full h-full overflow-y-auto bg-black text-white flex flex-col z-10 relative">
-        <div class="px-6 md:px-10 pt-10 pb-6 flex justify-between items-end">
+        <div class="px-6 md:px-10 pt-12 pb-6 flex justify-between items-end">
             <h1 class="text-4xl font-bold text-white">문서</h1>
             
             <div class="relative">
-                <button onclick="toggleNewMenu()" class="bg-[#3b82f6] text-white px-4 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-[14px] active:scale-95 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                <button onclick="toggleNewMenu()" class="bg-[#3b82f6] text-white px-5 py-2 rounded-full flex items-center gap-1.5 font-bold text-[14px] active:scale-95 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.3)]">
                     <i class="fa-solid fa-plus text-sm"></i> 신규
                 </button>
                 
-                <!-- 신규 드롭다운 메뉴 -->
-                <div id="new-menu" class="absolute right-0 mt-2 w-44 bg-[#1C1C1E] border border-white/10 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] overflow-hidden hidden z-50 origin-top-right transition-all">
-                    <button onclick="startBlankMemo()" class="w-full text-left px-4 py-3.5 text-[14px] font-bold text-white hover:bg-white/10 active:bg-white/20 transition-colors border-b border-white/5 flex items-center gap-2.5">
-                        <i class="fa-regular fa-pen-to-square text-[#3b82f6]"></i>메모만 하기
+                <div id="new-menu" class="absolute right-0 mt-3 w-48 bg-[#1C1C1E] border border-white/10 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] overflow-hidden hidden z-50 origin-top-right transition-all">
+                    <button onclick="startBlankMemo()" class="w-full text-left px-5 py-4 text-[14px] font-bold text-white hover:bg-white/10 active:bg-white/20 transition-colors border-b border-white/5 flex items-center gap-3">
+                        <i class="fa-regular fa-pen-to-square text-[#3b82f6] text-lg"></i>메모만 하기
                     </button>
-                    <button onclick="document.getElementById('file-upload-home').click()" class="w-full text-left px-4 py-3.5 text-[14px] font-bold text-white hover:bg-white/10 active:bg-white/20 transition-colors flex items-center gap-2.5">
-                        <i class="fa-regular fa-file-pdf text-[#3b82f6]"></i>문서 불러오기
+                    <button onclick="document.getElementById('file-upload-home').click()" class="w-full text-left px-5 py-4 text-[14px] font-bold text-white hover:bg-white/10 active:bg-white/20 transition-colors flex items-center gap-3">
+                        <i class="fa-regular fa-file-pdf text-[#3b82f6] text-lg"></i>문서 불러오기
                     </button>
                 </div>
             </div>
@@ -116,93 +123,100 @@
     <!-- ========================================== -->
     <div id="canvas-screen" class="fixed inset-0 w-full h-full hidden z-50 bg-[#0a0a0a] flex-col">
         
-        <!-- 알약 모양(Pill-shape) 플로팅 툴바 -->
-        <div class="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center bg-[#1C1C1E]/95 backdrop-blur-xl border border-white/10 rounded-full px-2 py-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.8)] max-w-[95%] overflow-visible scrollbar-hide">
-            
-            <button onclick="closeCanvas()" class="w-10 h-10 rounded-full flex items-center justify-center text-[#3b82f6] hover:bg-white/10 active:scale-95 shrink-0" title="홈으로">
-                <i class="fa-solid fa-house text-[15px]"></i>
-            </button>
-            
-            <div class="w-px h-6 bg-white/10 mx-2 shrink-0"></div>
-
-            <!-- 펜/지우개 -->
-            <div class="flex items-center bg-black/50 rounded-full p-1 border border-white/5 shrink-0 gap-1 relative">
-                <div class="tool-btn active w-9 h-9" id="tool-pen" onclick="setTool('pen')">
-                    <i class="fa-solid fa-pen text-[14px]"></i>
+        <!-- 미니멀 상단 헤더 -->
+        <div class="w-full h-[44px] bg-[#111111] flex items-center justify-between px-3 shrink-0 border-b border-white/5 z-40">
+            <div class="flex items-center gap-2 h-full">
+                <button onclick="closeCanvas()" class="w-10 h-10 flex items-center justify-center text-[#3b82f6] hover:bg-white/5 rounded-full active:scale-95 transition-colors">
+                    <i class="fa-solid fa-chevron-left text-[16px]"></i>
+                </button>
+                
+                <div class="flex items-center gap-2.5 bg-[#222222] px-3 py-1.5 rounded-lg border border-white/5 shadow-sm">
+                    <i class="fa-regular fa-file-lines text-[#3b82f6] text-[12px]"></i>
+                    <span id="canvas-title" class="text-[12px] font-bold text-white truncate max-w-[150px] md:max-w-[250px]">새로운 노트</span>
+                    <button onclick="closeCanvas()" class="text-gray-500 hover:text-red-400 ml-1"><i class="fa-solid fa-xmark text-[10px]"></i></button>
                 </div>
-                <div class="tool-btn w-9 h-9 relative" id="tool-eraser" onclick="handleEraserClick()">
-                    <i class="fa-solid fa-eraser text-[14px]"></i>
+            </div>
+            
+            <div class="flex items-center gap-1 h-full px-1">
+                <button onclick="document.getElementById('file-upload-home').click()" class="w-9 h-9 rounded-full flex items-center justify-center text-[#3b82f6] hover:bg-white/10 active:scale-95 transition-colors" title="문서 불러오기">
+                    <i class="fa-regular fa-file-pdf text-[15px]"></i>
+                </button>
+                <button onclick="saveNote()" class="w-9 h-9 rounded-full flex items-center justify-center text-[#3b82f6] hover:bg-white/10 active:scale-95 transition-colors" title="문서 저장">
+                    <i class="fa-solid fa-download text-[15px]"></i>
+                </button>
+                <button class="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-ellipsis text-[15px]"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 알약 모양 플로팅 툴바 -->
+        <div class="absolute top-[56px] left-1/2 -translate-x-1/2 z-50 flex items-center bg-[#222224]/95 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1 shadow-2xl max-w-[95%] overflow-visible scrollbar-hide">
+            
+            <!-- 언두 리두 -->
+            <button onclick="undo()" id="btn-undo" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-30 active:scale-95 shrink-0"><i class="fa-solid fa-rotate-left text-[12px]"></i></button>
+            <button onclick="redo()" id="btn-redo" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-30 active:scale-95 shrink-0"><i class="fa-solid fa-rotate-right text-[12px]"></i></button>
+
+            <div class="w-px h-4 bg-white/10 mx-2 shrink-0"></div>
+
+            <!-- 펜/지우개 그룹 -->
+            <div class="flex items-center bg-[#151515] rounded-full p-0.5 border border-white/5 shrink-0 gap-0.5 relative">
+                <div class="tool-btn active w-7 h-7" id="tool-pen" onclick="setTool('pen')">
+                    <i class="fa-solid fa-pen text-[12px]"></i>
+                </div>
+                <div class="tool-btn w-7 h-7 relative" id="tool-eraser" onclick="handleEraserClick()">
+                    <i class="fa-solid fa-eraser text-[12px]"></i>
                 </div>
 
-                <!-- 지우개 하위 메뉴 (드롭다운) -->
-                <div id="eraser-menu" class="absolute top-14 left-1/2 -translate-x-1/2 bg-[#2C2C2E] border border-white/10 rounded-2xl shadow-2xl overflow-hidden hidden flex-col w-36 z-[60]">
-                    <button onclick="setEraserMode('free')" id="btn-eraser-free" class="w-full text-left px-4 py-3 text-[14px] font-bold text-[#3b82f6] hover:bg-white/10 flex items-center gap-2.5 border-b border-white/5"><i class="fa-solid fa-eraser w-4"></i>자유 지우개</button>
-                    <button onclick="setEraserMode('stroke')" id="btn-eraser-stroke" class="w-full text-left px-4 py-3 text-[14px] font-bold text-white hover:bg-white/10 flex items-center gap-2.5 border-b border-white/5"><i class="fa-solid fa-burst w-4"></i>획 지우개</button>
-                    <button onclick="clearCanvasConfirm()" class="w-full text-left px-4 py-3 text-[14px] font-bold text-red-500 hover:bg-white/10 flex items-center gap-2.5"><i class="fa-regular fa-trash-can w-4"></i>모두 지우기</button>
+                <div id="eraser-menu" class="absolute top-10 left-1/2 -translate-x-1/2 bg-[#1C1C1E] border border-white/10 rounded-xl shadow-2xl overflow-hidden hidden flex-col w-36 z-[60]">
+                    <button onclick="setEraserMode('free')" id="btn-eraser-free" class="w-full text-left px-4 py-3 text-[13px] font-bold text-[#3b82f6] hover:bg-white/10 flex items-center gap-2.5 border-b border-white/5"><i class="fa-solid fa-eraser w-4"></i>자유 지우개</button>
+                    <button onclick="setEraserMode('stroke')" id="btn-eraser-stroke" class="w-full text-left px-4 py-3 text-[13px] font-bold text-white hover:bg-white/10 flex items-center gap-2.5 border-b border-white/5"><i class="fa-solid fa-burst w-4"></i>획 지우개</button>
+                    <button onclick="clearCanvasConfirm()" class="w-full text-left px-4 py-3 text-[13px] font-bold text-red-500 hover:bg-white/10 flex items-center gap-2.5"><i class="fa-regular fa-trash-can w-4"></i>모두 지우기</button>
                 </div>
             </div>
 
-            <div class="w-px h-6 bg-white/10 mx-2 shrink-0"></div>
+            <div class="w-px h-4 bg-white/10 mx-2 shrink-0"></div>
 
-            <!-- 손필기 / 펜슬 전용 토글 -->
-            <button onclick="toggleFingerDrawing()" id="btn-finger-toggle" class="w-10 h-10 rounded-full flex items-center justify-center text-[#3b82f6] bg-white/5 hover:bg-white/10 active:scale-95 shrink-0 transition-colors relative group" title="터치/펜슬 모드 변경">
-                <i id="finger-icon" class="fa-solid fa-pen-nib text-[16px]"></i>
-                <!-- 툴팁 -->
+            <!-- 펜슬 전용 토글 -->
+            <button onclick="toggleFingerDrawing()" id="btn-finger-toggle" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 bg-[#151515] hover:text-white active:scale-95 shrink-0 transition-colors border border-white/5 relative group" title="터치/펜슬 모드 변경">
+                <i id="finger-icon" class="fa-solid fa-pen-nib text-[12px]"></i>
                 <span class="absolute -bottom-8 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">펜슬 전용 모드</span>
             </button>
 
-            <div class="w-px h-6 bg-white/10 mx-2 shrink-0"></div>
+            <div class="w-px h-4 bg-white/10 mx-2 shrink-0"></div>
 
             <!-- 색상 팔레트 -->
-            <div class="flex items-center gap-3 px-2 shrink-0" id="color-palette">
-                <div class="color-btn active" style="background-color: #FFFFFF;" onclick="setColor('#FFFFFF', this)"></div>
+            <div class="flex items-center gap-2 px-1 shrink-0" id="color-palette">
+                <!-- 검은색을 기본(Default) 색상으로 변경 -->
+                <div class="color-btn active" style="background-color: #000000;" onclick="setColor('#000000', this)"></div>
                 <div class="color-btn" style="background-color: #3b82f6;" onclick="setColor('#3b82f6', this)"></div>
                 <div class="color-btn" style="background-color: #FF3B30;" onclick="setColor('#FF3B30', this)"></div>
-                <div class="color-btn" style="background-color: #34C759;" onclick="setColor('#34C759', this)"></div>
-                <!-- 커스텀 색상 선택기 -->
+                <div class="color-btn" style="background-color: #FFFFFF;" onclick="setColor('#FFFFFF', this)"></div>
                 <div class="color-btn relative overflow-hidden flex items-center justify-center" style="background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);" title="사용자 지정 색상">
                     <input type="color" id="custom-color-picker" class="absolute inset-0 w-[200%] h-[200%] -top-1/2 -left-1/2 opacity-0 cursor-pointer" onchange="setCustomColor(this.value, this.parentElement)">
                 </div>
             </div>
 
-            <div class="w-px h-6 bg-white/10 mx-2 shrink-0"></div>
+            <div class="w-px h-4 bg-white/10 mx-2 shrink-0"></div>
 
-            <!-- 선 굵기 -->
-            <div class="flex items-center gap-2 px-2 shrink-0">
-                <i class="fa-solid fa-circle text-[6px] text-gray-500"></i>
+            <!-- 선 굵기 슬라이더 -->
+            <div class="flex items-center gap-1.5 px-1 shrink-0">
+                <i class="fa-solid fa-circle text-[3px] text-gray-500"></i>
                 <input type="range" id="line-width" min="1" max="30" value="4" oninput="setLineWidth(this.value)">
-                <i class="fa-solid fa-circle text-[12px] text-gray-500"></i>
+                <i class="fa-solid fa-circle text-[7px] text-gray-500"></i>
             </div>
-
-            <div class="w-px h-6 bg-white/10 mx-2 shrink-0"></div>
-
-            <!-- 언두 리두 -->
-            <button onclick="undo()" id="btn-undo" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:bg-white/10 disabled:opacity-30 active:scale-95 shrink-0"><i class="fa-solid fa-rotate-left"></i></button>
-            <button onclick="redo()" id="btn-redo" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:bg-white/10 disabled:opacity-30 active:scale-95 shrink-0"><i class="fa-solid fa-rotate-right"></i></button>
-
-            <div class="w-px h-6 bg-white/10 mx-2 shrink-0"></div>
-
-            <!-- 문서 열기, 저장 -->
-            <button onclick="document.getElementById('file-upload-home').click()" class="w-10 h-10 rounded-full flex items-center justify-center text-[#3b82f6] hover:bg-white/10 active:scale-95 shrink-0" title="문서/이미지 열기">
-                <i class="fa-regular fa-file-pdf text-[18px]"></i>
-            </button>
-            <button onclick="saveNote()" class="w-10 h-10 rounded-full flex items-center justify-center text-[#3b82f6] hover:bg-white/10 active:scale-95 shrink-0" title="이미지로 저장">
-                <i class="fa-solid fa-download text-[17px]"></i>
-            </button>
         </div>
 
         <!-- PDF 페이지 네비게이션 컨트롤러 -->
-        <div id="pdf-controls" class="absolute top-4 right-4 z-50 bg-[#1C1C1E]/95 backdrop-blur-xl border border-white/10 rounded-full px-5 py-2 hidden items-center gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+        <div id="pdf-controls" class="absolute bottom-6 right-6 z-50 bg-[#2C2C2E]/95 backdrop-blur-xl border border-white/10 rounded-full px-5 py-3 hidden items-center gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
             <button onclick="prevPage()" class="text-gray-400 hover:text-[#3b82f6] active:scale-95 transition-colors"><i class="fa-solid fa-chevron-left text-lg"></i></button>
             <span class="text-[14px] font-black text-white tracking-widest"><span id="page-num">1</span> / <span id="page-count">1</span></span>
             <button onclick="nextPage()" class="text-gray-400 hover:text-[#3b82f6] active:scale-95 transition-colors"><i class="fa-solid fa-chevron-right text-lg"></i></button>
         </div>
 
         <!-- 캔버스 컨테이너 (레이어 분리 적용) -->
-        <div id="canvas-wrapper" class="flex-1 relative w-full h-full bg-[#0a0a0a] overflow-hidden flex items-center justify-center">
-            <!-- 배경 레이어 (PDF/이미지 렌더링 영역 - 절대 안 지워짐) -->
+        <div id="canvas-wrapper" class="flex-1 relative w-full h-full bg-[#111111] overflow-hidden flex items-center justify-center">
             <canvas id="bg-board" class="absolute z-0 pointer-events-none shadow-2xl"></canvas>
-            <!-- 드로잉 레이어 (필기 및 지우개 영역) -->
             <canvas id="drawing-board" class="absolute z-10 touch-none"></canvas>
         </div>
 
@@ -213,7 +227,7 @@
                     <i class="fa-regular fa-trash-can text-2xl text-red-500"></i>
                 </div>
                 <h3 class="text-[18px] font-black text-white mb-2">필기 전체 삭제</h3>
-                <p class="text-[14px] text-gray-400 text-center mb-6">캔버스(현재 페이지)의 필기 내용이 모두 지워집니다.<br>계속하시겠습니까?</p>
+                <p class="text-[14px] text-gray-400 text-center mb-6">현재 페이지의 필기 내용이 모두 지워집니다.<br>계속하시겠습니까?</p>
                 <div class="flex gap-3 w-full">
                     <button onclick="closeClearModal()" class="flex-1 py-3 rounded-xl bg-[#2A2A2C] text-white font-bold text-[15px] active:scale-95 transition-transform">취소</button>
                     <button onclick="clearCanvas()" class="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold text-[15px] active:scale-95 transition-transform">모두 지우기</button>
@@ -228,16 +242,26 @@
     </div>
 
     <script>
-        // ==========================================
-        // 1. 문서 목록 홈 화면 로직
-        // ==========================================
         const mockDocuments = [];
 
         function renderDocuments() {
             const grid = document.getElementById('document-grid');
             if (!grid) return; 
             let html = '';
-            mockDocuments.forEach(doc => { /* ... 생략 ... */ });
+            mockDocuments.forEach(doc => { 
+                html += `
+                <div class="flex flex-col cursor-pointer group" onclick="openCanvas(true)">
+                    <div class="doc-thumb aspect-[4/3] sm:aspect-[3/4] shadow-[0_2px_10px_rgba(255,255,255,0.05)] group-hover:scale-95 transition-transform duration-200 mb-2.5">
+                        <div class="w-full h-full bg-[#111111] relative z-0 overflow-hidden">
+                            ${doc.content}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center gap-1.5 px-1">
+                        <span class="text-[13px] font-bold text-white truncate">${doc.title}</span>
+                    </div>
+                    <span class="text-[10px] text-gray-500 font-medium text-center mt-0.5">${doc.date}</span>
+                </div>`;
+            });
             grid.innerHTML = html;
         }
 
@@ -252,7 +276,6 @@
                 menu.classList.add('hidden');
             }
             
-            // 지우개 메뉴 닫기 처리
             const eraserBtn = document.getElementById('tool-eraser');
             const eraserMenu = document.getElementById('eraser-menu');
             if (eraserBtn && eraserMenu && !eraserBtn.contains(e.target) && !eraserMenu.contains(e.target)) {
@@ -260,9 +283,6 @@
             }
         });
 
-        // ==========================================
-        // 2. 캔버스 및 레이어 엔진
-        // ==========================================
         const bgCanvas = document.getElementById('bg-board');
         const bgCtx = bgCanvas.getContext('2d', { willReadFrequently: true });
         
@@ -271,20 +291,18 @@
         
         let isDrawing = false;
         let currentTool = 'pen';
-        let eraserMode = 'free'; // 'free' or 'stroke'
-        let currentColor = '#FFFFFF';
+        let eraserMode = 'free'; 
+        let currentColor = '#000000'; // 기본 펜 색상을 검은색으로 변경
         let currentLineWidth = 4;
         let lastX = 0, lastY = 0;
-        let allowFingerDrawing = false; // 기본값: false (애플펜슬 전용 모드)
+        let allowFingerDrawing = false; 
 
-        // PDF 페이지네이션 데이터
         let pdfDoc = null;
         let pageNum = 1;
         let pageIsRendering = false;
         let pageNumPending = null;
-        let pageDrawings = {}; // { pageNum: dataURL }
+        let pageDrawings = {}; 
 
-        // 히스토리 관리 (현재 페이지 기준)
         let history = [];
         let historyStep = -1;
         const maxHistory = 30;
@@ -300,26 +318,22 @@
             }, 2000);
         }
 
-        // 캔버스 초기화 시 로컬 스토리지에 저장된 메모 불러오기
         function initCanvasData() {
             const savedNote = localStorage.getItem('savedDeviceNote');
             if (savedNote) {
                 history = [savedNote];
                 historyStep = 0;
                 restoreState();
-                showToast('이전 필기를 자동으로 불러왔습니다.');
             } else {
                 saveState();
             }
         }
 
-        // ==========================================
-        // 3. 파일 불러오기 & PDF 페이지네이션
-        // ==========================================
         function startBlankMemo() {
             document.getElementById('new-menu').classList.add('hidden');
             pdfDoc = null;
             document.getElementById('pdf-controls').classList.add('hidden');
+            document.getElementById('canvas-title').innerText = '새로운 노트';
             openCanvas(true);
         }
 
@@ -327,6 +341,8 @@
             document.getElementById('new-menu').classList.add('hidden');
             const file = e.target.files[0];
             if (!file) return;
+
+            document.getElementById('canvas-title').innerText = file.name;
 
             const fileExt = file.name.split('.').pop().toLowerCase();
 
@@ -343,7 +359,7 @@
                         document.getElementById('pdf-controls').classList.add('flex');
                         
                         pageNum = 1;
-                        pageDrawings = {}; // 새 문서 열때 필기 초기화
+                        pageDrawings = {}; 
                         history = []; historyStep = -1;
                         renderPage(pageNum);
                     }).catch(err => {
@@ -377,20 +393,17 @@
                 };
                 reader.readAsDataURL(file);
             } else {
-                showToast('지원하지 않는 파일 형식입니다. (PDF 또는 이미지 권장)');
+                showToast('지원하지 않는 파일 형식입니다.');
             }
         }
 
         function renderPage(num) {
             pageIsRendering = true;
             pdfDoc.getPage(num).then(function(page) {
-                const viewport = page.getViewport({ scale: 2.0 }); // 고해상도 렌더링
+                const viewport = page.getViewport({ scale: 2.0 }); 
                 fitCanvasToContent(viewport.width, viewport.height);
                 
-                const renderContext = {
-                    canvasContext: bgCtx,
-                    viewport: viewport
-                };
+                const renderContext = { canvasContext: bgCtx, viewport: viewport };
                 
                 page.render(renderContext).promise.then(() => {
                     pageIsRendering = false;
@@ -398,8 +411,6 @@
                         renderPage(pageNumPending);
                         pageNumPending = null;
                     }
-                    
-                    // 현재 페이지 필기 데이터 복구
                     restorePageDrawing(num);
                     document.getElementById('file-upload-home').value = '';
                 });
@@ -414,14 +425,14 @@
 
         function prevPage() {
             if (!pdfDoc || pageNum <= 1) return;
-            saveCurrentPageDrawing(); // 넘기기 전 저장
+            saveCurrentPageDrawing(); 
             pageNum--;
             queueRenderPage(pageNum);
         }
 
         function nextPage() {
             if (!pdfDoc || pageNum >= pdfDoc.numPages) return;
-            saveCurrentPageDrawing(); // 넘기기 전 저장
+            saveCurrentPageDrawing(); 
             pageNum++;
             queueRenderPage(pageNum);
         }
@@ -430,12 +441,12 @@
             pageDrawings[pageNum] = {
                 history: [...history],
                 historyStep: historyStep,
-                dataURL: canvas.toDataURL() // 드로잉 레이어만 저장
+                dataURL: canvas.toDataURL() 
             };
         }
 
         function restorePageDrawing(num) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // 드로잉 초기화
+            ctx.clearRect(0, 0, canvas.width, canvas.height); 
             if (pageDrawings[num]) {
                 history = [...pageDrawings[num].history];
                 historyStep = pageDrawings[num].historyStep;
@@ -444,14 +455,11 @@
                 img.onload = () => { ctx.drawImage(img, 0, 0); };
             } else {
                 history = []; historyStep = -1;
-                saveState(); // 빈 상태 저장
+                saveState(); 
             }
             updateUndoRedoButtons();
         }
 
-        // ==========================================
-        // 4. 캔버스 사이즈 및 UI 도구 설정
-        // ==========================================
         function fitCanvasToContent(contentWidth, contentHeight) {
             const wrapper = document.getElementById('canvas-wrapper');
             const scale = Math.min((wrapper.clientWidth - 40) / contentWidth, (wrapper.clientHeight - 40) / contentHeight);
@@ -459,7 +467,6 @@
             const finalWidth = contentWidth * scale;
             const finalHeight = contentHeight * scale;
 
-            // 해상도 대응
             const dpr = window.devicePixelRatio || 1;
             
             [bgCanvas, canvas].forEach(c => {
@@ -473,14 +480,14 @@
                 context.lineJoin = 'round';
             });
             
-            bgCtx.fillStyle = '#FFFFFF'; // PDF 배경은 하얗게
+            // 캔버스 배경(종이색상)을 완전한 흰색으로 적용
+            bgCtx.fillStyle = '#FFFFFF'; 
             bgCtx.fillRect(0, 0, finalWidth, finalHeight);
         }
 
         function resizeCanvas(isBlank = false) {
             if(document.getElementById('canvas-screen').classList.contains('hidden')) return;
             
-            // 빈 메모일 경우에만 전체화면 리사이징 (PDF/이미지는 fitCanvasToContent 사용)
             if (isBlank || !pdfDoc) {
                 const wrapper = document.getElementById('canvas-wrapper');
                 const dpr = window.devicePixelRatio || 1;
@@ -498,7 +505,8 @@
                     context.lineJoin = 'round';
 
                     if (c === bgCanvas) {
-                        context.fillStyle = '#0a0a0a';
+                        // 빈 메모의 배경(종이색상)도 흰색으로 고정
+                        context.fillStyle = '#FFFFFF';
                         context.fillRect(0, 0, wrapper.clientWidth, wrapper.clientHeight);
                     } else if (temp) {
                         context.putImageData(temp, 0, 0);
@@ -509,7 +517,6 @@
 
         function handleEraserClick() {
             if (currentTool === 'eraser') {
-                // 이미 지우개 선택 중이면 메뉴 열기
                 document.getElementById('eraser-menu').classList.toggle('hidden');
             } else {
                 setTool('eraser');
@@ -539,7 +546,7 @@
                 ctx.globalCompositeOperation = 'source-over';
             } else if (tool === 'eraser' && eraserMode === 'free') {
                 ctx.globalCompositeOperation = 'destination-out';
-                currentLineWidth = 20; // 자유 지우개 기본 크기
+                currentLineWidth = 20; 
                 document.getElementById('line-width').value = 20;
             }
         }
@@ -557,7 +564,6 @@
 
         function setCustomColor(color, element) {
             setColor(color, element);
-            // 선택된 색상으로 그라데이션 버튼 색상을 고정시켜 사용자 피드백 제공 (선택사항)
         }
 
         function setLineWidth(width) { currentLineWidth = width; }
@@ -568,25 +574,18 @@
             const icon = document.getElementById('finger-icon');
             
             if (allowFingerDrawing) {
-                // 터치 허용 (손가락 모드)
                 btn.classList.add('text-[#3b82f6]', 'bg-white/10');
-                btn.classList.remove('text-gray-400', 'bg-white/5');
-                icon.className = 'fa-solid fa-hand-pointer text-[16px]';
-                showToast('터치 및 펜슬 필기가 모두 허용됩니다.');
+                btn.classList.remove('text-gray-400', 'bg-[#151515]');
+                icon.className = 'fa-solid fa-hand-pointer text-[13px]';
+                showToast('터치 필기가 허용되었습니다.');
             } else {
-                // 애플펜슬 전용 (팜 리젝션)
                 btn.classList.remove('text-[#3b82f6]', 'bg-white/10');
-                btn.classList.add('text-gray-400', 'bg-white/5');
-                icon.className = 'fa-solid fa-pen-nib text-[16px]';
-                showToast('애플 펜슬 및 마우스 전용 모드 (팜 리젝션 활성화)');
+                btn.classList.add('text-gray-400', 'bg-[#151515]');
+                icon.className = 'fa-solid fa-pen-nib text-[13px]';
+                showToast('펜슬/마우스 전용 모드 (팜 리젝션 활성화)');
             }
         }
 
-        // ==========================================
-        // 5. 드로잉 이벤트 & 스마트 획 지우개
-        // ==========================================
-        
-        // 획 지우개용 반복적 Flood Fill (재귀 X -> Stack Overflow 방지)
         function eraseStroke(startX, startY) {
             const dpr = window.devicePixelRatio || 1;
             const x = Math.floor(startX * dpr);
@@ -597,7 +596,6 @@
             const w = canvas.width;
             const h = canvas.height;
             
-            // 클릭 지점 근처의 불투명한 픽셀 찾기 (정확한 클릭 보정)
             let targetX = x, targetY = y;
             let found = false;
             const radius = Math.floor(10 * dpr);
@@ -612,9 +610,8 @@
                 }
                 if(found) break;
             }
-            if(!found) return; // 그릴 선이 없음
+            if(!found) return; 
 
-            // Iterative Flood Fill
             const pixelStack = [targetY * w + targetX];
             while(pixelStack.length > 0) {
                 let pos = pixelStack.pop();
@@ -622,7 +619,6 @@
                 
                 if (data[idx + 3] === 0) continue;
                 
-                // 해당 픽셀 투명화
                 data[idx + 3] = 0;
                 data[idx] = 0; data[idx+1] = 0; data[idx+2] = 0;
                 
@@ -635,7 +631,7 @@
                 if (py < h - 1) pixelStack.push(pos + w);
             }
             ctx.putImageData(imgData, 0, 0);
-            saveState(); // 지운 후 상태 저장
+            saveState(); 
         }
 
         function startDrawing(e) {
@@ -646,17 +642,15 @@
             lastX = e.clientX - rect.left; lastY = e.clientY - rect.top;
 
             if (currentTool === 'eraser' && eraserMode === 'stroke') {
-                // 획 지우개 모드
                 eraseStroke(lastX, lastY);
                 isDrawing = false;
             } else {
-                // 일반 그리기 / 자유 지우개
                 isDrawing = true;
                 ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
                 
                 ctx.beginPath();
                 ctx.arc(lastX, lastY, currentLineWidth / 2, 0, Math.PI * 2);
-                ctx.fillStyle = currentColor; // destination-out에서는 색상 무관
+                ctx.fillStyle = currentColor; 
                 ctx.fill();
                 
                 ctx.beginPath();
@@ -674,8 +668,13 @@
 
             ctx.lineWidth = currentLineWidth;
             ctx.strokeStyle = currentColor;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
             ctx.lineTo(x, y);
             ctx.stroke();
+            ctx.closePath();
+            
             lastX = x; lastY = y;
         }
 
@@ -694,9 +693,6 @@
         canvas.addEventListener('pointercancel', stopDrawing);
         canvas.addEventListener('pointerout', stopDrawing);
 
-        // ==========================================
-        // 6. 히스토리, 초기화 및 저장
-        // ==========================================
         function saveState() {
             historyStep++;
             if (historyStep < history.length) { history.length = historyStep; }
@@ -705,7 +701,6 @@
             if (history.length > maxHistory) { history.shift(); historyStep--; }
             updateUndoRedoButtons();
             
-            // 디바이스 로컬 저장
             try { localStorage.setItem('savedDeviceNote', dataUrl); } catch (err) {}
         }
 
@@ -728,7 +723,7 @@
             img.onload = function () {
                 ctx.save();
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // 드로잉만 리셋
+                ctx.clearRect(0, 0, canvas.width, canvas.height); 
                 ctx.drawImage(img, 0, 0);
                 ctx.restore();
             };
@@ -758,7 +753,7 @@
         function clearCanvas() {
             closeClearModal();
             ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // 문서(bg)는 보존하고 드로잉만 지움
+            ctx.clearRect(0, 0, canvas.width, canvas.height); 
             ctx.restore();
             saveState();
             localStorage.removeItem('savedDeviceNote');
@@ -766,22 +761,36 @@
         }
 
         function saveNote() {
-            // 합성용 임시 캔버스 생성 (배경 + 드로잉 병합)
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = canvas.width;
             tempCanvas.height = canvas.height;
             const tempCtx = tempCanvas.getContext('2d');
             
-            // 1. 배경 복사 (문서)
             tempCtx.drawImage(bgCanvas, 0, 0);
-            // 2. 그 위에 드로잉 복사
             tempCtx.drawImage(canvas, 0, 0);
 
-            const link = document.createElement('a');
-            link.download = `Note_${new Date().getTime()}.png`;
-            link.href = tempCanvas.toDataURL('image/png');
-            link.click();
-            showToast('노트가 갤러리에 저장되었습니다.');
+            const thumbCanvas = document.createElement('canvas');
+            const thumbScale = 300 / canvas.width;
+            thumbCanvas.width = 300;
+            thumbCanvas.height = canvas.height * thumbScale;
+            const thumbCtx = thumbCanvas.getContext('2d');
+            thumbCtx.drawImage(tempCanvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
+            
+            const thumbnailDataUrl = thumbCanvas.toDataURL('image/jpeg', 0.8);
+
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}. ${now.getMonth()+1}. ${now.getDate()}. ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            mockDocuments.unshift({
+                title: document.getElementById('canvas-title').innerText,
+                date: dateStr,
+                star: false,
+                starColor: "",
+                content: `<img src="${thumbnailDataUrl}" class="w-full h-full object-cover">`
+            });
+
+            renderDocuments();
+            showToast('문서가 홈 화면에 저장되었습니다.');
         }
 
         function openCanvas(isBlank = true) {
@@ -803,7 +812,6 @@
 
         window.addEventListener('resize', () => {
             if(window.innerWidth === canvas.width && window.innerHeight === canvas.height) return;
-            // 빈 화면일때만 자동 리사이즈 (문서가 로드된 상태면 fitCanvasToContent로 고정됨)
             if(!pdfDoc) resizeCanvas(true);
         });
         
